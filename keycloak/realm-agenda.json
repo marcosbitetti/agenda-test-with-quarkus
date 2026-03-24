@@ -1,0 +1,50 @@
+{
+  "realm": "agenda",
+  "enabled": true,
+  "loginWithEmailAllowed": true,
+  "registrationAllowed": true,
+  "roles": {
+    "realm": [
+      { "name": "user" }
+    ]
+  },
+  "users": [
+    {
+      "username": "joao",
+      "email": "joao@example.com",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    },
+    {
+      "username": "maria",
+      "email": "maria@example.com",
+      "enabled": true,
+      "credentials": [
+        {
+          "type": "password",
+          "value": "password",
+          "temporary": false
+        }
+      ],
+      "realmRoles": ["user"]
+    }
+  ],
+  "clients": [
+    {
+      "clientId": "quarkus-app",
+      "enabled": true,
+      "publicClient": false,
+      "secret": "quarkus-app-secret",
+      "directAccessGrantsEnabled": true,
+      "redirectUris": ["*"],
+      "protocol": "openid-connect"
+    }
+  ]
+}

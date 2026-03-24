@@ -1,0 +1,27 @@
+# Build outputs
+target/
+
+# Maven wrapper & local settings
+.mvn/
+settings.xml
+
+# OS files
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Environment files (do not commit secrets)
+.env
+
+# Logs
+*.log
+
+# Patch / merge artifacts and AI artifacts
+*.orig
+*.orig.*
+*.rej
+
+# Editor temp files
+*~

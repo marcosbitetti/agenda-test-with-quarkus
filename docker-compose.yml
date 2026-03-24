@@ -1,0 +1,66 @@
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-agenda}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-agenda}
+      POSTGRES_DB: ${POSTGRES_DB:-agenda}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    networks:
+      - agenda-net
+
+  adminer:
+    image: adminer:4
+    restart: unless-stopped
+    ports:
+      - "${ADMINER_PORT:-8081}:8080"
+    networks:
+      - agenda-net
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:21.1.1
+    environment:
+      KEYCLOAK_ADMIN: ${KEYCLOAK_ADMIN:-admin}
+      KEYCLOAK_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-admin}
+    command: start-dev --http-enabled=true --import-realm
+    volumes:
+      - ./keycloak/realm-agenda.json:/opt/keycloak/data/import/realm-agenda.json:ro
+    ports:
+      - "${KEYCLOAK_PORT:-8082}:8080"
+    networks:
+      - agenda-net
+
+  quarkus-app:
+    build:
+      context: ./quarkus-app
+      dockerfile: Dockerfile
+    image: quarkus-app:dev
+    ports:
+      - "${QUARKUS_HOST_PORT:-8080}:8080"
+    environment:
+      DB_HOST: ${DB_HOST:-db}
+      DB_PORT: ${DB_PORT:-5432}
+      DB_DATABASE: ${POSTGRES_DB:-agenda}
+      DB_USER: ${POSTGRES_USER:-agenda}
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-agenda}
+      MAVEN_OPTS: -Dmaven.repo.local=/var/maven/.m2/repository
+    volumes:
+      - ./quarkus-app:/workspace:cached
+      - maven-repository:/var/maven/.m2/repository
+    working_dir: /workspace
+    command: mvn -DskipTests quarkus:dev -Dquarkus.http.host=0.0.0.0
+    depends_on:
+      - db
+      - keycloak
+    networks:
+      - agenda-net
+    tty: true
+
+volumes:
+  db-data:
+  maven-repository:
+
+networks:
+  agenda-net:
+    driver: bridge
