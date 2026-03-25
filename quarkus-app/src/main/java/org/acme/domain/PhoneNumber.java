@@ -7,26 +7,30 @@ import java.time.OffsetDateTime;
 import java.util.Objects;
 
 public class PhoneNumber extends AgendaEntity {
-    public String number;
+    private String number;
 
     public PhoneNumber() {
     }
 
-    public PhoneNumber(Long id,
-                       String number,
-                       OffsetDateTime createdAt,
-                       OffsetDateTime updatedAt,
-                       Status status) {
+    public PhoneNumber(final Long id,
+                       final String number,
+                       final OffsetDateTime createdAt,
+                       final OffsetDateTime updatedAt,
+                       final Status status) {
         super(id, createdAt, updatedAt, status);
         this.number = requireText(number, AgendaMessages.get(MessageKey.PHONE_REQUIRED));
     }
 
-    private String requireText(String value, String message) {
+    private String requireText(final String value, final String message) {
         Objects.requireNonNull(value, message);
         String trimmed = value.trim();
         if (trimmed.isEmpty()) {
             throw new IllegalArgumentException(message);
         }
         return trimmed;
+    }
+
+    public String getNumber() {
+        return number;
     }
 }

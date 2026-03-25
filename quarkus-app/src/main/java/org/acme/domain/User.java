@@ -3,19 +3,39 @@ package org.acme.domain;
 import java.time.OffsetDateTime;
 
 public class User {
-    public Long id;
-    public String externalId; // sub claim from OIDC
-    public String username;
-    public String email;
-    public OffsetDateTime createdAt;
+    private Long id;
+    private String externalId; // sub claim from OIDC
+    private String username;
+    private String email;
+    private OffsetDateTime createdAt;
 
     public User() {}
 
-    public User(Long id, String externalId, String username, String email, OffsetDateTime createdAt) {
+    public User(final Long id, final String externalId, final String username, final String email, final OffsetDateTime createdAt) {
         this.id = id;
         this.externalId = externalId;
         this.username = username;
         this.email = email;
         this.createdAt = createdAt;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getExternalId() {
+        return externalId;
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
     }
 }

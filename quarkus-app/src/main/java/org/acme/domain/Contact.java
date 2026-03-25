@@ -9,26 +9,26 @@ import java.util.List;
 import java.util.Objects;
 
 public class Contact extends AgendaEntity {
-    public Long ownerUserId;
-    public String firstName;
-    public String lastName;
-    public LocalDate birthDate;
-    public List<PhoneNumber> phoneNumbers;
-    public String relationshipDegree;
+    private Long ownerUserId;
+    private String firstName;
+    private String lastName;
+    private LocalDate birthDate;
+    private List<PhoneNumber> phoneNumbers;
+    private String relationshipDegree;
 
     public Contact() {
     }
 
-    public Contact(Long id,
-                   Long ownerUserId,
-                   String firstName,
-                   String lastName,
-                   LocalDate birthDate,
-                   List<PhoneNumber> phoneNumbers,
-                   String relationshipDegree,
-                   OffsetDateTime createdAt,
-                   OffsetDateTime updatedAt,
-                   Status status) {
+    public Contact(final Long id,
+                   final Long ownerUserId,
+                   final String firstName,
+                   final String lastName,
+                   final LocalDate birthDate,
+                   final List<PhoneNumber> phoneNumbers,
+                   final String relationshipDegree,
+                   final OffsetDateTime createdAt,
+                   final OffsetDateTime updatedAt,
+                   final Status status) {
         super(id, createdAt, updatedAt, status);
         this.ownerUserId = Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED));
         this.firstName = requireText(firstName, AgendaMessages.get(MessageKey.FIRST_NAME_REQUIRED));
@@ -50,8 +50,7 @@ public class Contact extends AgendaEntity {
         }
         return trimmed;
     }
-
-    private List<PhoneNumber> requirePhoneNumbers(List<PhoneNumber> phoneNumbers) {
+    private List<PhoneNumber> requirePhoneNumbers(final List<PhoneNumber> phoneNumbers) {
         Objects.requireNonNull(phoneNumbers, AgendaMessages.get(MessageKey.PHONE_REQUIRED));
         if (phoneNumbers.isEmpty()) {
             throw new IllegalArgumentException(AgendaMessages.get(MessageKey.PHONE_REQUIRED));
@@ -62,11 +61,35 @@ public class Contact extends AgendaEntity {
         return List.copyOf(phoneNumbers);
     }
 
-    private String normalizeOptional(String value) {
+    private String normalizeOptional(final String value) {
         if (value == null) {
             return null;
         }
         String trimmed = value.trim();
         return trimmed.isEmpty() ? null : trimmed;
+    }
+
+    public Long getOwnerUserId() {
+        return ownerUserId;
+    }
+
+    public String getFirstName() {
+        return firstName;
+    }
+
+    public String getLastName() {
+        return lastName;
+    }
+
+    public LocalDate getBirthDate() {
+        return birthDate;
+    }
+
+    public List<PhoneNumber> getPhoneNumbers() {
+        return phoneNumbers;
+    }
+
+    public String getRelationshipDegree() {
+        return relationshipDegree;
     }
 }

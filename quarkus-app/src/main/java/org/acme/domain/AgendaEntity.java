@@ -8,15 +8,15 @@ import java.util.Objects;
 
 public abstract class AgendaEntity implements IAgendaEntity {
 
-    public Long id;
-    public OffsetDateTime createdAt;
-    public OffsetDateTime updatedAt;
-    public Status status;
+    private Long id;
+    private OffsetDateTime createdAt;
+    private OffsetDateTime updatedAt;
+    private Status status;
 
     protected AgendaEntity() {
     }
 
-    protected AgendaEntity(Long id, OffsetDateTime createdAt, OffsetDateTime updatedAt, Status status) {
+    protected AgendaEntity(final Long id, final OffsetDateTime createdAt, final OffsetDateTime updatedAt, final Status status) {
         this.id = id;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -49,13 +49,13 @@ public abstract class AgendaEntity implements IAgendaEntity {
     }
 
     @Override
-    public void softDelete(OffsetDateTime updatedAt) {
+    public void softDelete(final OffsetDateTime updatedAt) {
         OffsetDateTime timestamp = Objects.requireNonNull(updatedAt, AgendaMessages.get(MessageKey.UPDATED_AT_REQUIRED));
         this.status = Status.DELETED;
         this.updatedAt = timestamp;
     }
 
-    protected Status requireStatus(Status status) {
+    protected Status requireStatus(final Status status) {
         if (status == null) {
             throw new IllegalArgumentException(AgendaMessages.get(MessageKey.STATUS_INVALID));
         }
