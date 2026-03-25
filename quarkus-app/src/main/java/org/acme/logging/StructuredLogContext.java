@@ -15,8 +15,7 @@ public final class StructuredLogContext {
     }
 
     public static String getString(String key) {
-        Object value = MDC.get(key);
-        return value == null ? null : String.valueOf(value);
+        return java.util.Optional.ofNullable(MDC.get(key)).map(String::valueOf).orElse(null);
     }
 
     public static Scope open(Map<String, Object> fields) {

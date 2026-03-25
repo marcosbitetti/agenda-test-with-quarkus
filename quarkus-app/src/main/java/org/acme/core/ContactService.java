@@ -60,29 +60,26 @@ public class ContactService {
                                     LocalDate birthDate,
                                     List<String> phoneNumbers,
                                     String relationshipDegree) {
-                        Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED));
-                        Objects.requireNonNull(contactId, AgendaMessages.get(MessageKey.CONTACT_REQUIRED));
+        Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED));
+        Objects.requireNonNull(contactId, AgendaMessages.get(MessageKey.CONTACT_REQUIRED));
 
-        Optional<Contact> existing = contactRepository.findActiveByIdAndOwnerUserId(contactId, ownerUserId);
-        if (existing.isEmpty()) {
-            return Optional.empty();
-        }
-
-        Contact current = existing.get();
-        OffsetDateTime now = OffsetDateTime.now();
-        Contact updated = new Contact(
-                current.id,
-                current.ownerUserId,
-                firstName,
-                lastName,
-                birthDate,
-                buildPhoneNumbers(phoneNumbers, now),
-                relationshipDegree,
-                current.createdAt,
-                now,
-                current.status
-        );
-        return contactRepository.update(updated);
+        return contactRepository.findActiveByIdAndOwnerUserId(contactId, ownerUserId)
+            .flatMap(current -> {
+                OffsetDateTime now = OffsetDateTime.now();
+                Contact updated = new Contact(
+                    current.id,
+                    current.ownerUserId,
+                    firstName,
+                    lastName,
+                    birthDate,
+                    buildPhoneNumbers(phoneNumbers, now),
+                    relationshipDegree,
+                    current.createdAt,
+                    now,
+                    current.status
+                );
+                return contactRepository.update(updated);
+            });
     }
 
     @Transactional
