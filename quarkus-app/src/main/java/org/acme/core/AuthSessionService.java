@@ -4,6 +4,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.acme.adapters.keycloak.KeycloakPasswordAuthenticator;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.acme.logging.StructuredLogContext;
 import org.jboss.logging.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -125,7 +127,7 @@ public class AuthSessionService {
             ))) {
                 LOG.error("auth.session.refresh_failed", e);
             }
-            throw new SessionUnavailableException("Falha ao renovar sessao", e);
+            throw new SessionUnavailableException(AgendaMessages.get(MessageKey.AUTH_SESSION_REFRESH_FAILED), e);
         }
     }
 

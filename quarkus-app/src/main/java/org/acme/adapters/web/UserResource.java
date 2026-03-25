@@ -11,6 +11,8 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.core.AuthSessionService;
 import org.acme.core.UserService;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.jboss.logging.Logger;
 
 @Path("/api/users")
@@ -32,7 +34,7 @@ public class UserResource {
         try {
             var session = authSessionService.findActiveSession(sessionId);
             if (session.isEmpty()) {
-                throw new NotAuthorizedException("Sessao invalida ou expirada.");
+                throw new NotAuthorizedException(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED));
             }
 
             var currentUser = session.get().user();
@@ -45,7 +47,7 @@ public class UserResource {
             LOG.debugf("users.me.completed subject=%s username=%s", currentUser.subject(), currentUser.username());
             return Response.ok(new UserDto(user)).build();
         } catch (AuthSessionService.SessionUnavailableException e) {
-            throw new ServiceUnavailableException("Sessao temporariamente indisponivel.");
+            throw new ServiceUnavailableException(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE));
         }
     }
 }

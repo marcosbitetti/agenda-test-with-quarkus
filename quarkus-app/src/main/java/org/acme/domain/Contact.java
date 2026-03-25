@@ -1,5 +1,8 @@
 package org.acme.domain;
 
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
+
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -27,10 +30,10 @@ public class Contact extends AgendaEntity {
                    OffsetDateTime updatedAt,
                    Status status) {
         super(id, createdAt, updatedAt, status);
-        this.ownerUserId = Objects.requireNonNull(ownerUserId, "Usuario dono obrigatorio.");
-        this.firstName = requireText(firstName, "Nome obrigatorio.");
-        this.lastName = requireText(lastName, "Sobrenome obrigatorio.");
-        this.birthDate = Objects.requireNonNull(birthDate, "Data de nascimento obrigatoria.");
+        this.ownerUserId = Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED));
+        this.firstName = requireText(firstName, AgendaMessages.get(MessageKey.FIRST_NAME_REQUIRED));
+        this.lastName = requireText(lastName, AgendaMessages.get(MessageKey.LAST_NAME_REQUIRED));
+        this.birthDate = Objects.requireNonNull(birthDate, AgendaMessages.get(MessageKey.BIRTH_DATE_REQUIRED));
         this.phoneNumbers = requirePhoneNumbers(phoneNumbers);
         this.relationshipDegree = normalizeOptional(relationshipDegree);
     }
@@ -49,12 +52,12 @@ public class Contact extends AgendaEntity {
     }
 
     private List<PhoneNumber> requirePhoneNumbers(List<PhoneNumber> phoneNumbers) {
-        Objects.requireNonNull(phoneNumbers, "Telefone obrigatorio.");
+        Objects.requireNonNull(phoneNumbers, AgendaMessages.get(MessageKey.PHONE_REQUIRED));
         if (phoneNumbers.isEmpty()) {
-            throw new IllegalArgumentException("Telefone obrigatorio.");
+            throw new IllegalArgumentException(AgendaMessages.get(MessageKey.PHONE_REQUIRED));
         }
         if (phoneNumbers.stream().anyMatch(Objects::isNull)) {
-            throw new IllegalArgumentException("Telefone invalido.");
+            throw new IllegalArgumentException(AgendaMessages.get(MessageKey.PHONE_INVALID));
         }
         return List.copyOf(phoneNumbers);
     }

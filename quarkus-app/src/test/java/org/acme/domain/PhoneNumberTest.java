@@ -1,6 +1,8 @@
 package org.acme.domain;
 
 import org.acme.domain.IAgendaEntity.Status;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.junit.jupiter.api.Test;
 
 import java.time.OffsetDateTime;
@@ -35,7 +37,7 @@ public class PhoneNumberTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new PhoneNumber(null, "   ", null, null, Status.ACTIVE));
 
-        assertEquals("Telefone obrigatorio.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.PHONE_REQUIRED), error.getMessage());
     }
 
     @Test
@@ -57,6 +59,6 @@ public class PhoneNumberTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
             () -> new PhoneNumber(1L, "11999999999", null, null, null));
 
-        assertEquals("Status invalido.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.STATUS_INVALID), error.getMessage());
     }
 }

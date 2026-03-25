@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
 
 import java.io.IOException;
@@ -46,7 +48,7 @@ public class KeycloakPasswordAuthenticator {
 
     public AuthenticatedUser refresh(String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, "Refresh token ausente");
+            throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_MISSING));
         }
         return requestToken(refreshBody(refreshToken), TokenRequestType.REFRESH);
     }
@@ -74,12 +76,12 @@ public class KeycloakPasswordAuthenticator {
             }
 
             throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
-                    "Falha ao encerrar sessao no Keycloak");
+                    AgendaMessages.get(MessageKey.KEYCLOAK_LOGOUT_FAILED));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, "Logout interrompido", e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_LOGOUT_INTERRUPTED), e);
         } catch (IOException e) {
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, "Falha ao comunicar logout ao Keycloak", e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_LOGOUT_COMMUNICATION_FAILED), e);
         }
     }
 
@@ -94,12 +96,12 @@ public class KeycloakPasswordAuthenticator {
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             return mapResponse(response, requestType);
         } catch (ConnectException e) {
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, "Keycloak indisponivel", e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_UNAVAILABLE), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, "Autenticacao interrompida", e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_AUTH_INTERRUPTED), e);
         } catch (IOException e) {
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, "Falha ao comunicar com o Keycloak", e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_COMMUNICATION_FAILED), e);
         }
     }
 
@@ -109,18 +111,18 @@ public class KeycloakPasswordAuthenticator {
         if (response.statusCode() == 200) {
             String accessToken = text(body, "access_token");
             if (accessToken == null || accessToken.isBlank()) {
-                throw new IOException("Resposta sem access token");
+                throw new IOException(AgendaMessages.get(MessageKey.KEYCLOAK_RESPONSE_MISSING_ACCESS_TOKEN));
             }
             long expiresIn = body.path("expires_in").asLong(300);
             String refreshToken = text(body, "refresh_token");
             if (refreshToken == null || refreshToken.isBlank()) {
-                throw new IOException("Resposta sem refresh token");
+                throw new IOException(AgendaMessages.get(MessageKey.KEYCLOAK_RESPONSE_MISSING_REFRESH_TOKEN));
             }
             long refreshExpiresIn = body.path("refresh_expires_in").asLong(expiresIn);
             JsonNode claims = decodeClaims(accessToken);
             String subject = text(claims, "sub");
             if (subject == null || subject.isBlank()) {
-                throw new IOException("Token sem subject");
+                throw new IOException(AgendaMessages.get(MessageKey.KEYCLOAK_TOKEN_MISSING_SUBJECT));
             }
             return new AuthenticatedUser(
                     subject,
@@ -136,32 +138,32 @@ public class KeycloakPasswordAuthenticator {
         String error = text(body, "error");
         if (response.statusCode() == 400 && "invalid_grant".equals(error)) {
             if (requestType == TokenRequestType.REFRESH) {
-                throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, "Refresh token rejeitado");
+                throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_REJECTED));
             }
-            throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS, "Credenciais invalidas");
+            throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS, AgendaMessages.get(MessageKey.KEYCLOAK_INVALID_CREDENTIALS));
         }
 
         if (response.statusCode() == 401) {
             if ("invalid_grant".equals(error)) {
                 if (requestType == TokenRequestType.REFRESH) {
-                    throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, "Refresh token rejeitado");
+                    throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_REJECTED));
                 }
-                throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS, "Credenciais invalidas");
+                throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS, AgendaMessages.get(MessageKey.KEYCLOAK_INVALID_CREDENTIALS));
             }
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, "Cliente Keycloak rejeitado");
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_CLIENT_REJECTED));
         }
 
         throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
-                "Keycloak respondeu com status " + response.statusCode());
+                AgendaMessages.format(MessageKey.KEYCLOAK_STATUS_RESPONSE, response.statusCode()));
     }
 
     private JsonNode decodeClaims(String accessToken) throws IOException {
         if (accessToken == null || accessToken.isBlank()) {
-            throw new IOException("Token JWT ausente");
+            throw new IOException(AgendaMessages.get(MessageKey.KEYCLOAK_JWT_MISSING));
         }
         String[] segments = accessToken.split("\\.");
         if (segments.length < 2) {
-            throw new IOException("Token JWT invalido");
+            throw new IOException(AgendaMessages.get(MessageKey.KEYCLOAK_JWT_INVALID));
         }
 
         byte[] decoded = Base64.getUrlDecoder().decode(segments[1]);

@@ -4,6 +4,8 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import jakarta.inject.Inject;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.junit.jupiter.api.BeforeEach;
 import org.acme.adapters.persistence.AuthSessionRepositoryImpl;
 import org.junit.jupiter.api.Test;
@@ -104,7 +106,7 @@ public class UserResourceIT {
                 .when().get("/api/contacts")
                 .then()
                                 .statusCode(401)
-                                .body("message", equalTo("Sessao invalida ou expirada."))
+                                .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)))
                                 .body("requestId", notNullValue())
                                 .body("method", equalTo("GET"))
                                 .body("path", equalTo("/api/contacts"))
@@ -188,7 +190,7 @@ public class UserResourceIT {
                 .when().put("/api/contacts/99999")
                 .then()
                 .statusCode(404)
-                .body("message", equalTo("Contato nao encontrado."))
+                .body("message", equalTo(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND)))
                 .body("requestId", notNullValue())
                 .body("method", equalTo("PUT"))
                 .body("path", equalTo("/api/contacts/99999"))
@@ -213,7 +215,7 @@ public class UserResourceIT {
                 .when().post("/api/contacts")
                 .then()
                 .statusCode(400)
-                .body("message", equalTo("Nome obrigatorio."))
+                .body("message", equalTo(AgendaMessages.get(MessageKey.FIRST_NAME_REQUIRED)))
                 .body("requestId", notNullValue())
                 .body("method", equalTo("POST"))
                 .body("path", equalTo("/api/contacts"))
@@ -268,7 +270,7 @@ public class UserResourceIT {
                 .when().post("/api/auth/login")
                 .then()
                 .statusCode(401)
-                .body("message", equalTo("Login ou senha invalidos."))
+                .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_INVALID_CREDENTIALS)))
                 .body("requestId", notNullValue())
                 .body("method", equalTo("POST"))
                 .body("path", equalTo("/api/auth/login"))
@@ -289,7 +291,7 @@ public class UserResourceIT {
                 .when().post("/api/auth/login")
                 .then()
                 .statusCode(400)
-                .body("message", equalTo("Informe login ou e-mail e senha."))
+                .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_LOGIN_REQUIRED)))
                 .body("requestId", notNullValue())
                 .body("method", equalTo("POST"))
                 .body("path", equalTo("/api/auth/login"))
@@ -369,7 +371,7 @@ public class UserResourceIT {
                 .when().get("/api/users/me")
                 .then()
                 .statusCode(401)
-                .body("message", equalTo("Sessao invalida ou expirada."))
+                .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)))
                 .body("requestId", notNullValue())
                 .body("method", equalTo("GET"))
                 .body("path", equalTo("/api/users/me"))
@@ -407,7 +409,7 @@ public class UserResourceIT {
                 .when().get("/api/users/me")
                 .then()
                 .statusCode(401)
-                .body("message", equalTo("Sessao invalida ou expirada."))
+                .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)))
                 .body("requestId", notNullValue())
                 .body("method", equalTo("GET"))
                 .body("path", equalTo("/api/users/me"))
@@ -450,7 +452,7 @@ public class UserResourceIT {
                 .when().get("/api/users/me")
                 .then()
                 .statusCode(401)
-                .body("message", equalTo("Sessao invalida ou expirada."))
+                .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)))
                 .body("requestId", notNullValue())
                 .body("method", equalTo("GET"))
                 .body("path", equalTo("/api/users/me"))

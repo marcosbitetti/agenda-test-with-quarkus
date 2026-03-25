@@ -1,5 +1,8 @@
 package org.acme.domain;
 
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
+
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -47,14 +50,14 @@ public abstract class AgendaEntity implements IAgendaEntity {
 
     @Override
     public void softDelete(OffsetDateTime updatedAt) {
-        OffsetDateTime timestamp = Objects.requireNonNull(updatedAt, "Data de atualizacao obrigatoria.");
+        OffsetDateTime timestamp = Objects.requireNonNull(updatedAt, AgendaMessages.get(MessageKey.UPDATED_AT_REQUIRED));
         this.status = Status.DELETED;
         this.updatedAt = timestamp;
     }
 
     protected Status requireStatus(Status status) {
         if (status == null) {
-            throw new IllegalArgumentException("Status invalido.");
+            throw new IllegalArgumentException(AgendaMessages.get(MessageKey.STATUS_INVALID));
         }
         return status;
     }

@@ -8,6 +8,8 @@ import jakarta.ws.rs.Produces;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import org.acme.core.AuthSessionService;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -38,7 +40,7 @@ public class IndexResource {
             return serveLoginPage();
         } catch (AuthSessionService.SessionUnavailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity("Falha ao validar a sessao atual.")
+                    .entity(AgendaMessages.get(MessageKey.AUTH_SESSION_VALIDATION_FAILED))
                     .build();
         }
     }
@@ -54,7 +56,7 @@ public class IndexResource {
             return serveHomeShell();
         } catch (AuthSessionService.SessionUnavailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity("Falha ao validar a sessao atual.")
+                    .entity(AgendaMessages.get(MessageKey.AUTH_SESSION_VALIDATION_FAILED))
                     .build();
         }
     }
@@ -93,10 +95,10 @@ public class IndexResource {
                 String html = Files.readString(p, StandardCharsets.UTF_8);
                 return Response.ok(html).build();
             } catch (IOException e) {
-                return Response.serverError().entity("Error reading page: " + e.getMessage()).build();
+                return Response.serverError().entity(AgendaMessages.format(MessageKey.PAGE_READ_ERROR, e.getMessage())).build();
             }
         }
 
-        return Response.status(Response.Status.NOT_FOUND).entity(resourceName + " not found").build();
+        return Response.status(Response.Status.NOT_FOUND).entity(AgendaMessages.format(MessageKey.PAGE_NOT_FOUND, resourceName)).build();
     }
 }

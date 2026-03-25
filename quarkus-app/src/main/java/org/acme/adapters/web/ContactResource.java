@@ -17,6 +17,8 @@ import org.acme.core.AuthSessionService;
 import org.acme.core.ContactService;
 import org.acme.core.UserService;
 import org.acme.domain.Contact;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.jboss.logging.Logger;
 
 import java.time.LocalDate;
@@ -53,7 +55,7 @@ public class ContactResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response create(@CookieParam(AuthSessionService.COOKIE_NAME) String sessionId, CreateContactRequest request) {
         if (request == null) {
-            return badRequest("Dados do contato obrigatorios.");
+            return badRequest(AgendaMessages.get(MessageKey.CONTACT_DATA_REQUIRED));
         }
 
         UserContext userContext = authenticate(sessionId);
@@ -84,7 +86,7 @@ public class ContactResource {
                            @PathParam("contactId") Long contactId,
                            CreateContactRequest request) {
         if (contactId == null || request == null) {
-            return badRequest("Dados do contato obrigatorios.");
+            return badRequest(AgendaMessages.get(MessageKey.CONTACT_DATA_REQUIRED));
         }
 
         UserContext userContext = authenticate(sessionId);
@@ -101,7 +103,7 @@ public class ContactResource {
                     request.relationshipDegree()
             );
             if (updated.isEmpty()) {
-                throw new NotFoundException("Contato nao encontrado.");
+                throw new NotFoundException(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND));
             }
 
             return Response.ok(new ContactDto(updated.get())).build();
@@ -118,11 +120,11 @@ public class ContactResource {
         UserContext userContext = authenticate(sessionId);
         LOG.debug("contacts.delete.received userId=" + userContext.userId() + " contactId=" + contactId);
         if (contactId == null) {
-            return badRequest("Contato invalido.");
+            return badRequest(AgendaMessages.get(MessageKey.CONTACT_INVALID));
         }
 
         if (contactService.findActiveByIdAndOwnerUserId(contactId, userContext.userId()).isEmpty()) {
-            throw new NotFoundException("Contato nao encontrado.");
+            throw new NotFoundException(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND));
         }
 
         contactService.softDelete(contactId, userContext.userId());
@@ -133,7 +135,7 @@ public class ContactResource {
         try {
             var session = authSessionService.findActiveSession(sessionId);
             if (session.isEmpty()) {
-                throw new jakarta.ws.rs.NotAuthorizedException("Sessao invalida.");
+                throw new jakarta.ws.rs.NotAuthorizedException(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID));
             }
 
             var currentUser = session.get().user();
@@ -144,13 +146,13 @@ public class ContactResource {
             );
             return new UserContext(user.id);
         } catch (AuthSessionService.SessionUnavailableException e) {
-            throw new jakarta.ws.rs.ServiceUnavailableException("Sessao indisponivel.");
+            throw new jakarta.ws.rs.ServiceUnavailableException(AgendaMessages.get(MessageKey.AUTH_SESSION_UNAVAILABLE));
         }
     }
 
     private Response badRequest(String message) {
         return Response.status(Response.Status.BAD_REQUEST)
-            .entity(ApiErrorResponse.current(message == null || message.isBlank() ? "Dados invalidos." : message,
+            .entity(ApiErrorResponse.current(message == null || message.isBlank() ? AgendaMessages.get(MessageKey.INVALID_DATA) : message,
                 Response.Status.BAD_REQUEST.getStatusCode()))
                 .build();
     }

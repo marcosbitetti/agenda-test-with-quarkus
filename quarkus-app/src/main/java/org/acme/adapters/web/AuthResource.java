@@ -13,6 +13,8 @@ import jakarta.ws.rs.core.Response;
 import org.acme.adapters.keycloak.KeycloakPasswordAuthenticator;
 import org.acme.core.AuthSessionService;
 import org.acme.core.UserService;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.acme.logging.StructuredLogContext;
 import org.jboss.logging.Logger;
 
@@ -50,7 +52,7 @@ public class AuthResource {
                 LOG.warn("auth.login.failed");
             }
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(ApiErrorResponse.current("Informe login ou e-mail e senha.", Response.Status.BAD_REQUEST.getStatusCode()))
+                    .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_LOGIN_REQUIRED), Response.Status.BAD_REQUEST.getStatusCode()))
                     .build();
         }
 
@@ -97,7 +99,7 @@ public class AuthResource {
                     LOG.warn("auth.login.failed");
                 }
                 return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(ApiErrorResponse.current("Login ou senha invalidos.", Response.Status.UNAUTHORIZED.getStatusCode()))
+                    .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_INVALID_CREDENTIALS), Response.Status.UNAUTHORIZED.getStatusCode()))
                         .build();
             }
 
@@ -112,7 +114,7 @@ public class AuthResource {
                 }
 
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-            .entity(ApiErrorResponse.current("Servico de autenticacao temporariamente indisponivel.", Response.Status.SERVICE_UNAVAILABLE.getStatusCode()))
+            .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE), Response.Status.SERVICE_UNAVAILABLE.getStatusCode()))
                     .build();
         }
     }

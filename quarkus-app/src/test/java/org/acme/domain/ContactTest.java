@@ -1,6 +1,8 @@
 package org.acme.domain;
 
 import org.acme.domain.IAgendaEntity.Status;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -88,7 +90,7 @@ public class ContactTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new Contact(null, 1L, " ", "Souza", LocalDate.now(), List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null, Status.ACTIVE));
 
-        assertEquals("Nome obrigatorio.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.FIRST_NAME_REQUIRED), error.getMessage());
     }
 
     @Test
@@ -96,7 +98,7 @@ public class ContactTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new Contact(null, 1L, "Joao", " ", LocalDate.now(), List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null, Status.ACTIVE));
 
-        assertEquals("Sobrenome obrigatorio.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.LAST_NAME_REQUIRED), error.getMessage());
     }
 
     @Test
@@ -104,7 +106,7 @@ public class ContactTest {
         NullPointerException error = assertThrows(NullPointerException.class,
                 () -> new Contact(null, 1L, "Joao", "Souza", null, List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null, Status.ACTIVE));
 
-        assertEquals("Data de nascimento obrigatoria.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.BIRTH_DATE_REQUIRED), error.getMessage());
     }
 
     @Test
@@ -112,7 +114,7 @@ public class ContactTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new Contact(null, 1L, "Joao", "Souza", LocalDate.now(), List.of(), null, null, null, Status.ACTIVE));
 
-        assertEquals("Telefone obrigatorio.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.PHONE_REQUIRED), error.getMessage());
     }
 
     @Test
@@ -120,7 +122,7 @@ public class ContactTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new Contact(null, 1L, "Joao", "Souza", LocalDate.now(), Arrays.asList(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE), null), null, null, null, Status.ACTIVE));
 
-        assertEquals("Telefone invalido.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.PHONE_INVALID), error.getMessage());
     }
 
     @Test
@@ -164,6 +166,6 @@ public class ContactTest {
                                                 null
                 ));
 
-        assertEquals("Status invalido.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.STATUS_INVALID), error.getMessage());
     }
 }

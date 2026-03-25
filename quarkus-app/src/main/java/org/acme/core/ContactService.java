@@ -6,6 +6,8 @@ import jakarta.transaction.Transactional;
 import org.acme.domain.Contact;
 import org.acme.domain.IAgendaEntity;
 import org.acme.domain.PhoneNumber;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -37,7 +39,7 @@ public class ContactService {
         OffsetDateTime now = OffsetDateTime.now();
         Contact contact = new Contact(
                 null,
-                Objects.requireNonNull(ownerUserId, "Usuario dono obrigatorio."),
+            Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED)),
                 firstName,
                 lastName,
                 birthDate,
@@ -58,8 +60,8 @@ public class ContactService {
                                     LocalDate birthDate,
                                     List<String> phoneNumbers,
                                     String relationshipDegree) {
-        Objects.requireNonNull(ownerUserId, "Usuario dono obrigatorio.");
-        Objects.requireNonNull(contactId, "Contato obrigatorio.");
+                        Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED));
+                        Objects.requireNonNull(contactId, AgendaMessages.get(MessageKey.CONTACT_REQUIRED));
 
         Optional<Contact> existing = contactRepository.findActiveByIdAndOwnerUserId(contactId, ownerUserId);
         if (existing.isEmpty()) {
@@ -89,7 +91,7 @@ public class ContactService {
     }
 
     private List<PhoneNumber> buildPhoneNumbers(List<String> phoneNumbers, OffsetDateTime now) {
-        Objects.requireNonNull(phoneNumbers, "Telefone obrigatorio.");
+        Objects.requireNonNull(phoneNumbers, AgendaMessages.get(MessageKey.PHONE_REQUIRED));
         return phoneNumbers.stream()
                 .map(number -> new PhoneNumber(null, number, now, now, IAgendaEntity.Status.ACTIVE))
                 .toList();

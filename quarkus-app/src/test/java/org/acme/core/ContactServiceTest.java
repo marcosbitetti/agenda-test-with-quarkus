@@ -2,6 +2,8 @@ package org.acme.core;
 
 import org.acme.domain.Contact;
 import org.acme.domain.IAgendaEntity;
+import org.acme.i18n.AgendaMessages;
+import org.acme.i18n.MessageKey;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -58,7 +60,7 @@ public class ContactServiceTest {
         NullPointerException error = assertThrows(NullPointerException.class,
                 () -> contactService.create(null, "Maria", "Silva", LocalDate.now(), List.of("11999999999"), null));
 
-        assertEquals("Usuario dono obrigatorio.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED), error.getMessage());
     }
 
     @Test
@@ -148,6 +150,6 @@ public class ContactServiceTest {
         NullPointerException error = assertThrows(NullPointerException.class,
                 () -> contactService.update(null, 5L, "Maria", "Silva", LocalDate.now(), List.of("11999990000"), null));
 
-        assertEquals("Usuario dono obrigatorio.", error.getMessage());
+        assertEquals(AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED), error.getMessage());
     }
 }
