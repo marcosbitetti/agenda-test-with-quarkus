@@ -6,6 +6,7 @@ import org.acme.domain.Contact;
 import org.acme.domain.IAgendaEntity;
 
 import java.time.OffsetDateTime;
+import java.util.Objects;
 import java.util.List;
 import java.util.Optional;
 
@@ -30,18 +31,14 @@ public class ContactRepositoryImpl implements ContactRepository {
                 ownerUserId,
                 IAgendaEntity.Status.ACTIVE
         ).firstResult();
-        return entity == null ? Optional.empty() : Optional.of(entity.toDomain());
+        return Optional.ofNullable(entity).map(ContactEntity::toDomain);
     }
 
     @Override
     public Contact save(Contact contact) {
         ContactEntity entity = ContactEntity.fromDomain(contact);
-        if (entity.createdAt == null) {
-            entity.createdAt = OffsetDateTime.now();
-        }
-        if (entity.status == null) {
-            entity.status = IAgendaEntity.Status.ACTIVE;
-        }
+        entity.createdAt = Objects.requireNonNullElse(entity.createdAt, OffsetDateTime.now());
+        entity.status = Objects.requireNonNullElse(entity.status, IAgendaEntity.Status.ACTIVE);
         entity.persist();
         return entity.toDomain();
     }
@@ -65,10 +62,10 @@ public class ContactRepositoryImpl implements ContactRepository {
         entity.updatedAt = contact.updatedAt;
 
         if (entity.phoneNumbers != null) {
-            for (PhoneNumberEntity phoneNumber : entity.phoneNumbers) {
+            entity.phoneNumbers.forEach(phoneNumber -> {
                 phoneNumber.status = IAgendaEntity.Status.DELETED;
                 phoneNumber.updatedAt = contact.updatedAt;
-            }
+            });
         }
 
         entity.phoneNumbers = contact.phoneNumbers.stream()
@@ -94,10 +91,10 @@ public class ContactRepositoryImpl implements ContactRepository {
         entity.updatedAt = updatedAt;
 
         if (entity.phoneNumbers != null) {
-            for (PhoneNumberEntity phoneNumber : entity.phoneNumbers) {
+            entity.phoneNumbers.forEach(phoneNumber -> {
                 phoneNumber.status = IAgendaEntity.Status.DELETED;
                 phoneNumber.updatedAt = updatedAt;
-            }
+            });
         }
     }
 }

@@ -15,20 +15,14 @@ public class AuthSessionRepositoryImpl implements AuthSessionRepository {
     @Override
     public Optional<AuthSessionService.SessionData> findById(String sessionId) {
         AuthSessionEntity entity = AuthSessionEntity.findById(sessionId);
-        if (entity == null) {
-            return Optional.empty();
-        }
-        return Optional.of(entity.toDomain());
+        return Optional.ofNullable(entity).map(AuthSessionEntity::toDomain);
     }
 
     @Override
     @Transactional
     public Optional<AuthSessionService.SessionData> findByIdForUpdate(String sessionId) {
         AuthSessionEntity entity = AuthSessionEntity.findById(sessionId, LockModeType.PESSIMISTIC_WRITE);
-        if (entity == null) {
-            return Optional.empty();
-        }
-        return Optional.of(entity.toDomain());
+        return Optional.ofNullable(entity).map(AuthSessionEntity::toDomain);
     }
 
     @Override
