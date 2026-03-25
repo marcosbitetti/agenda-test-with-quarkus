@@ -41,7 +41,7 @@ public class UserResourceIT {
                 .body("""
                         {
                           "username": "joao",
-                          "password": "password"
+                          "password": "12345678"
                         }
                         """)
                 .when().post("/api/auth/login")
@@ -278,7 +278,7 @@ public class UserResourceIT {
                 .body("""
                         {
                           "username": "joao",
-                          "password": "password"
+                          "password": "12345678"
                         }
                         """)
                 .when().post("/api/auth/login")
@@ -302,7 +302,7 @@ public class UserResourceIT {
                 .body("""
                         {
                           "username": "joao",
-                          "password": "password"
+                          "password": "12345678"
                         }
                         """)
                 .when().post("/api/auth/login")
@@ -327,7 +327,7 @@ public class UserResourceIT {
                 .body("""
                         {
                           "username": "joao",
-                          "password": "password"
+                          "password": "12345678"
                         }
                         """)
                 .when().post("/api/auth/login")
@@ -352,7 +352,7 @@ public class UserResourceIT {
                 .body("""
                         {
                           "username": "joao",
-                          "password": "password"
+                          "password": "12345678"
                         }
                         """)
                 .when().post("/api/auth/login")
@@ -395,7 +395,7 @@ public class UserResourceIT {
                 .body("""
                         {
                           "username": "joao",
-                          "password": "password"
+                          "password": "12345678"
                         }
                         """)
                 .when().post("/api/auth/login")
@@ -428,7 +428,7 @@ public class UserResourceIT {
                                                                 .body("""
                                                                                                 {
                                                                                                         "username": "joao",
-                                                                                                        "password": "password"
+                                                                                                        "password": "12345678"
                                                                                                 }
                                                                                                 """)
                                                                 .when().post("/api/auth/login")
