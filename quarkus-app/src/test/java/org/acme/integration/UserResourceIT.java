@@ -10,6 +10,8 @@ import org.junit.jupiter.api.Test;
 import java.time.Instant;
 
 import static io.restassured.RestAssured.given;
+import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
 
@@ -39,6 +41,52 @@ public class UserResourceIT {
                 .cookie("AGENDA_SESSION", notNullValue())
                 .body("username", equalTo("joao"));
     }
+
+        @Test
+        public void testRootWithoutSessionReturnsLoginPage() {
+                given()
+                                .when().get("/")
+                                .then()
+                                .statusCode(200)
+                                .body(containsString("Informe seu login ou e-mail e senha."));
+        }
+
+        @Test
+        public void testRootWithSessionRedirectsToHome() {
+                String sessionCookie = loginAndExtractSessionCookie();
+
+                given()
+                                .redirects().follow(false)
+                                .cookie("AGENDA_SESSION", sessionCookie)
+                                .when().get("/")
+                                .then()
+                                .statusCode(303)
+                                .header("Location", endsWith("/home"));
+        }
+
+        @Test
+        public void testHomeWithoutSessionRedirectsToLogin() {
+                given()
+                                .redirects().follow(false)
+                                .when().get("/home")
+                                .then()
+                                .statusCode(303)
+                                .header("Location", endsWith("/"));
+        }
+
+        @Test
+        public void testHomeWithSessionReturnsPage() {
+                String sessionCookie = loginAndExtractSessionCookie();
+
+                given()
+                                .cookie("AGENDA_SESSION", sessionCookie)
+                                .when().get("/home")
+                                .then()
+                                .statusCode(200)
+                                .body(containsString("Minha agenda"))
+                                                                .body(containsString("Painel autenticado"))
+                                                                .body(containsString("Sessao ativa"));
+        }
 
     @Test
     public void testLoginWithInvalidCredentialsReturns401() {
@@ -222,4 +270,20 @@ public class UserResourceIT {
     void expireRefreshToken(String sessionId, Instant expiresAt) {
                 authSessionTestSupport.expireRefreshToken(sessionId, expiresAt);
     }
+
+                String loginAndExtractSessionCookie() {
+                                ValidatableResponse loginResponse = given()
+                                                                .contentType(ContentType.JSON)
+                                                                .body("""
+                                                                                                {
+                                                                                                        "username": "joao",
+                                                                                                        "password": "password"
+                                                                                                }
+                                                                                                """)
+                                                                .when().post("/api/auth/login")
+                                                                .then()
+                                                                .statusCode(200);
+
+                                return loginResponse.extract().cookie("AGENDA_SESSION");
+                }
 }

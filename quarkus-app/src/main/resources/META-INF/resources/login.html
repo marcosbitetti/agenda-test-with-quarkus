@@ -50,16 +50,6 @@
 
               <button id="submit-button" type="submit" class="w-full rounded-2xl bg-emerald-700 px-4 py-3 font-medium text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:bg-emerald-300">Entrar</button>
             </form>
-
-            <section id="session-card" class="hidden rounded-3xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-950">
-              <p class="text-xs font-semibold uppercase tracking-[0.3em] text-emerald-700">Sessão ativa</p>
-              <h3 id="session-name" class="mt-2 text-2xl font-semibold"></h3>
-              <p id="session-email" class="mt-1 text-emerald-900/80"></p>
-              <div class="mt-5 flex gap-3">
-                <button id="refresh-user" type="button" class="rounded-2xl border border-emerald-300 px-4 py-2 font-medium text-emerald-800 transition hover:bg-emerald-100">Atualizar dados</button>
-                <button id="logout-button" type="button" class="rounded-2xl bg-stone-900 px-4 py-2 font-medium text-white transition hover:bg-stone-700">Sair</button>
-              </div>
-            </section>
           </div>
         </div>
       </section>
@@ -71,11 +61,6 @@
       const passwordInput = document.getElementById('password');
       const submitButton = document.getElementById('submit-button');
       const errorMessage = document.getElementById('error-message');
-      const sessionCard = document.getElementById('session-card');
-      const sessionName = document.getElementById('session-name');
-      const sessionEmail = document.getElementById('session-email');
-      const refreshUserButton = document.getElementById('refresh-user');
-      const logoutButton = document.getElementById('logout-button');
 
       function showError(message) {
         errorMessage.textContent = message;
@@ -92,17 +77,8 @@
         submitButton.textContent = isLoading ? 'Entrando...' : 'Entrar';
       }
 
-      function renderAuthenticatedUser(user) {
-        loginForm.classList.add('hidden');
-        clearError();
-        sessionName.textContent = user.username;
-        sessionEmail.textContent = user.email || 'Sem e-mail informado';
-        sessionCard.classList.remove('hidden');
-      }
-
-      function renderLoggedOut() {
-        sessionCard.classList.add('hidden');
-        loginForm.classList.remove('hidden');
+      function redirectToHome() {
+        window.location.replace('/home');
       }
 
       async function loadCurrentUser() {
@@ -112,18 +88,15 @@
         });
 
         if (response.status === 401) {
-          renderLoggedOut();
           return;
         }
 
         if (!response.ok) {
           showError('Nao foi possivel carregar a sessao atual.');
-          renderLoggedOut();
           return;
         }
 
-        const user = await response.json();
-        renderAuthenticatedUser(user);
+        redirectToHome();
       }
 
       loginForm.addEventListener('submit', async (event) => {
@@ -161,25 +134,14 @@
             return;
           }
 
-          const user = await response.json();
+          await response.json();
           passwordInput.value = '';
-          renderAuthenticatedUser(user);
+          redirectToHome();
         } catch (error) {
           showError('Falha ao autenticar.');
         } finally {
           setLoading(false);
         }
-      });
-
-      refreshUserButton.addEventListener('click', async () => {
-        clearError();
-        await loadCurrentUser();
-      });
-
-      logoutButton.addEventListener('click', async () => {
-        clearError();
-        await fetch('/api/auth/session', { method: 'DELETE' });
-        renderLoggedOut();
       });
 
       loadCurrentUser();
