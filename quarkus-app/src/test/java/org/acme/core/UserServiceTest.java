@@ -12,6 +12,8 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
@@ -34,6 +36,7 @@ public class UserServiceTest {
         assertEquals(1L, result.id);
         assertEquals("ext-123", result.externalId);
         assertEquals("joao", result.username);
+        verify(userRepository, never()).update(any(User.class));
     }
 
     @Test
@@ -49,5 +52,20 @@ public class UserServiceTest {
         assertEquals(2L, result.id);
         assertEquals("ext-new", result.externalId);
         assertEquals("newuser", result.username);
+    }
+
+    @Test
+    public void updateExistingWhenIdentityDataChanges() {
+        User existing = new User(1L, "ext-123", "joao", "joao@old.example.com", OffsetDateTime.now());
+        User updated = new User(1L, "ext-123", "joao", "joao@example.com", existing.createdAt);
+
+        when(userRepository.findByExternalId("ext-123")).thenReturn(Optional.of(existing));
+        when(userRepository.update(any(User.class))).thenReturn(updated);
+
+        User result = userService.findOrCreateByExternalId("ext-123", "joao", "joao@example.com");
+
+        assertNotNull(result);
+        assertEquals("joao@example.com", result.email);
+        verify(userRepository).update(any(User.class));
     }
 }

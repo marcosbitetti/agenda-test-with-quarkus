@@ -1,0 +1,13 @@
+{
+  "name": "quarkus-app-tailwind",
+  "private": true,
+  "devDependencies": {
+    "tailwindcss": "^3.4.0",
+    "postcss": "^8.4.0",
+    "autoprefixer": "^10.4.0"
+  },
+  "scripts": {
+    "build:css": "npx tailwindcss -i ./src/main/resources/META-INF/resources/css/input.css -o ./src/main/resources/META-INF/resources/css/tailwind.css --minify",
+    "watch:css": "npx tailwindcss -i ./src/main/resources/META-INF/resources/css/input.css -o ./src/main/resources/META-INF/resources/css/tailwind.css --watch"
+  }
+}

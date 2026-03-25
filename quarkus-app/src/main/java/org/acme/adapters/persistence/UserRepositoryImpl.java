@@ -23,4 +23,16 @@ public class UserRepositoryImpl implements UserRepository {
         e.persist();
         return e.toDomain();
     }
+
+    @Override
+    public User update(User user) {
+        UserEntity e = UserEntity.findById(user.id);
+        if (e == null) {
+            return save(user);
+        }
+
+        e.username = user.username;
+        e.email = user.email;
+        return e.toDomain();
+    }
 }
