@@ -4,6 +4,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import jakarta.inject.Inject;
+import org.junit.jupiter.api.BeforeEach;
 import org.acme.adapters.persistence.AuthSessionRepositoryImpl;
 import org.junit.jupiter.api.Test;
 
@@ -11,6 +12,7 @@ import java.time.Instant;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
+import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -24,6 +26,11 @@ public class UserResourceIT {
 
         @Inject
         AuthSessionTestSupport authSessionTestSupport;
+
+        @BeforeEach
+        public void setUp() {
+                authSessionTestSupport.clearContacts();
+        }
 
     @Test
     public void testLoginReturnsSessionCookieAndUser() {
@@ -84,9 +91,105 @@ public class UserResourceIT {
                                 .then()
                                 .statusCode(200)
                                 .body(containsString("Minha agenda"))
-                                                                .body(containsString("Painel autenticado"))
-                                                                .body(containsString("Sessao ativa"));
+                                                                .body(containsString("Contatos ativos"))
+                                                                .body(containsString("Novo contato"));
         }
+
+    @Test
+    public void testContactsEndpointRequiresSession() {
+        given()
+                .when().get("/api/contacts")
+                .then()
+                .statusCode(401);
+    }
+
+    @Test
+    public void testCreateAndListContactsForAuthenticatedUser() {
+        String sessionCookie = loginAndExtractSessionCookie();
+
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "firstName": "Maria",
+                          "lastName": "Silva",
+                          "birthDate": "1992-07-10",
+                          "phoneNumbers": ["11999990000", "1133334444"],
+                          "relationshipDegree": "Prima"
+                        }
+                        """)
+                .when().post("/api/contacts")
+                .then()
+                .statusCode(201)
+                .body("firstName", equalTo("Maria"))
+                .body("lastName", equalTo("Silva"))
+                .body("fullName", equalTo("Maria Silva"))
+                .body("phoneNumbers", hasSize(2));
+
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .when().get("/api/contacts")
+                .then()
+                .statusCode(200)
+                .body("", hasSize(1))
+                .body("[0].relationshipDegree", equalTo("Prima"));
+    }
+
+    @Test
+    public void testCreateContactWithInvalidPayloadReturns400() {
+        String sessionCookie = loginAndExtractSessionCookie();
+
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "firstName": "  ",
+                          "lastName": "Silva",
+                          "birthDate": "1992-07-10",
+                          "phoneNumbers": ["11999990000"]
+                        }
+                        """)
+                .when().post("/api/contacts")
+                .then()
+                .statusCode(400)
+                .body("message", equalTo("Nome obrigatorio."));
+    }
+
+    @Test
+    public void testDeleteContactSoftDeletesIt() {
+        String sessionCookie = loginAndExtractSessionCookie();
+
+        Number contactId = given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "firstName": "Carlos",
+                          "lastName": "Souza",
+                          "birthDate": "1988-03-21",
+                          "phoneNumbers": ["21988887777"]
+                        }
+                        """)
+                .when().post("/api/contacts")
+                .then()
+                .statusCode(201)
+                .extract().path("id");
+
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .when().delete("/api/contacts/" + contactId.longValue())
+                .then()
+                .statusCode(204);
+
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .when().get("/api/contacts")
+                .then()
+                .statusCode(200)
+                .body("", hasSize(0));
+    }
 
     @Test
     public void testLoginWithInvalidCredentialsReturns401() {

@@ -4,6 +4,8 @@ import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.transaction.Transactional;
 import org.acme.adapters.persistence.AuthSessionEntity;
+import org.acme.adapters.persistence.ContactEntity;
+import org.acme.adapters.persistence.PhoneNumberEntity;
 import org.acme.core.AuthSessionService;
 
 import java.time.Instant;
@@ -32,5 +34,11 @@ public class AuthSessionTestSupport {
 
     public long cleanupExpiredSessions() {
         return authSessionService.cleanupExpiredSessions();
+    }
+
+    @Transactional
+    public void clearContacts() {
+        PhoneNumberEntity.deleteAll();
+        ContactEntity.deleteAll();
     }
 }
