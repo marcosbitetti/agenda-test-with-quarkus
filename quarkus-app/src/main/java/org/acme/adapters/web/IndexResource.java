@@ -22,6 +22,9 @@ import java.util.stream.Collectors;
 @Path("/")
 public class IndexResource {
 
+    private static final String LOGIN_PAGE = "login.html";
+    private static final String HOME_PAGE = "home.html";
+
     @Inject
     AuthSessionService authSessionService;
 
@@ -32,7 +35,7 @@ public class IndexResource {
             if (hasActiveSession(sessionId)) {
                 return redirectTo("/home");
             }
-            return servePage("login.html");
+            return serveLoginPage();
         } catch (AuthSessionService.SessionUnavailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
                     .entity("Falha ao validar a sessao atual.")
@@ -48,7 +51,7 @@ public class IndexResource {
             if (!hasActiveSession(sessionId)) {
                 return redirectTo("/");
             }
-            return servePage("home.html");
+            return serveHomeShell();
         } catch (AuthSessionService.SessionUnavailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
                     .entity("Falha ao validar a sessao atual.")
@@ -62,6 +65,14 @@ public class IndexResource {
 
     private Response redirectTo(String path) {
         return Response.seeOther(URI.create(path)).build();
+    }
+
+    private Response serveLoginPage() {
+        return servePage(LOGIN_PAGE);
+    }
+
+    private Response serveHomeShell() {
+        return servePage(HOME_PAGE);
     }
 
     private Response servePage(String resourceName) {

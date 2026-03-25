@@ -13,6 +13,7 @@ import java.time.Instant;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
+import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.endsWith;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
@@ -91,8 +92,30 @@ public class UserResourceIT {
                                 .then()
                                 .statusCode(200)
                                 .body(containsString("Minha agenda"))
-                                                                .body(containsString("Contatos ativos"))
-                                                                .body(containsString("Novo contato"));
+                                                                                                                                .body(containsString("hx-get=\"/api/contacts/panel\""))
+                                                                                                                                .body(containsString("/js/vendor/htmx.min.js"));
+        }
+
+        @Test
+        public void testContactsPanelRequiresSession() {
+                given()
+                                .when().get("/api/contacts/panel")
+                                .then()
+                                .statusCode(401);
+        }
+
+        @Test
+        public void testContactsPanelShowsEmptyState() {
+                String sessionCookie = loginAndExtractSessionCookie();
+
+                given()
+                                .cookie("AGENDA_SESSION", sessionCookie)
+                                .when().get("/api/contacts/panel")
+                                .then()
+                                .statusCode(200)
+                                .contentType(containsString("text/html"))
+                                .body(containsString("Nenhum contato ativo cadastrado."))
+                                .body(containsString(">0<"));
         }
 
     @Test
@@ -136,6 +159,28 @@ public class UserResourceIT {
                 .body("[0].relationshipDegree", equalTo("Prima"));
     }
 
+        @Test
+        public void testCreateContactFromPanelRendersUpdatedHtml() {
+                String sessionCookie = loginAndExtractSessionCookie();
+
+                given()
+                                .cookie("AGENDA_SESSION", sessionCookie)
+                                .contentType("application/x-www-form-urlencoded")
+                                .formParam("firstName", "Maria")
+                                .formParam("lastName", "Silva")
+                                .formParam("birthDate", "1992-07-10")
+                                .formParam("phoneNumbers", "11999990000\n1133334444")
+                                .formParam("relationshipDegree", "Prima")
+                                .when().post("/api/contacts/panel")
+                                .then()
+                                .statusCode(200)
+                                .contentType(containsString("text/html"))
+                                .body(containsString("Contato salvo com sucesso."))
+                                .body(containsString("Maria Silva"))
+                                .body(containsString("Prima"))
+                                .body(containsString(">1<"));
+        }
+
     @Test
     public void testCreateContactWithInvalidPayloadReturns400() {
         String sessionCookie = loginAndExtractSessionCookie();
@@ -156,6 +201,25 @@ public class UserResourceIT {
                 .statusCode(400)
                 .body("message", equalTo("Nome obrigatorio."));
     }
+
+        @Test
+        public void testCreateContactFromPanelWithInvalidPayloadReturnsFragmentError() {
+                String sessionCookie = loginAndExtractSessionCookie();
+
+                given()
+                                .cookie("AGENDA_SESSION", sessionCookie)
+                                .contentType("application/x-www-form-urlencoded")
+                                .formParam("firstName", " ")
+                                .formParam("lastName", "Silva")
+                                .formParam("birthDate", "1992-07-10")
+                                .formParam("phoneNumbers", "11999990000")
+                                .when().post("/api/contacts/panel")
+                                .then()
+                                .statusCode(200)
+                                .contentType(containsString("text/html"))
+                                .body(containsString("Nome obrigatorio."))
+                                .body(not(containsString("Contato salvo com sucesso.")));
+        }
 
     @Test
     public void testDeleteContactSoftDeletesIt() {
@@ -189,6 +253,49 @@ public class UserResourceIT {
                 .then()
                 .statusCode(200)
                 .body("", hasSize(0));
+    }
+
+    @Test
+    public void testDeleteContactFromPanelUpdatesFragment() {
+        String sessionCookie = loginAndExtractSessionCookie();
+
+        Number contactId = given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "firstName": "Carlos",
+                          "lastName": "Souza",
+                          "birthDate": "1988-03-21",
+                          "phoneNumbers": ["21988887777"]
+                        }
+                        """)
+                .when().post("/api/contacts")
+                .then()
+                .statusCode(201)
+                .extract().path("id");
+
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .when().delete("/api/contacts/panel/" + contactId.longValue())
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Contato excluido com sucesso."))
+                .body(containsString("Nenhum contato ativo cadastrado."));
+    }
+
+    @Test
+    public void testDeleteMissingContactFromPanelReturnsControlledFragment() {
+        String sessionCookie = loginAndExtractSessionCookie();
+
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .when().delete("/api/contacts/panel/99999")
+                .then()
+                .statusCode(200)
+                .contentType(containsString("text/html"))
+                .body(containsString("Contato nao encontrado."));
     }
 
     @Test
