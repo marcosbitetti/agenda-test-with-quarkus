@@ -4,6 +4,7 @@ import io.quarkus.test.junit.QuarkusTest;
 import io.restassured.http.ContentType;
 import io.restassured.response.ValidatableResponse;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.HttpMethod;
 import org.acme.i18n.AgendaMessages;
 import org.acme.i18n.MessageKey;
 import org.junit.jupiter.api.BeforeEach;
@@ -108,7 +109,7 @@ public class UserResourceIT {
                                 .statusCode(401)
                                 .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)))
                                 .body("requestId", notNullValue())
-                                .body("method", equalTo("GET"))
+                                .body("method", equalTo(HttpMethod.GET))
                                 .body("path", equalTo("/api/contacts"))
                                 .body("status", equalTo(401))
                                 .body("timestamp", notNullValue());
@@ -192,7 +193,7 @@ public class UserResourceIT {
                 .statusCode(404)
                 .body("message", equalTo(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND)))
                 .body("requestId", notNullValue())
-                .body("method", equalTo("PUT"))
+                .body("method", equalTo(HttpMethod.PUT))
                 .body("path", equalTo("/api/contacts/99999"))
                 .body("status", equalTo(404));
     }
@@ -217,7 +218,7 @@ public class UserResourceIT {
                 .statusCode(400)
                 .body("message", equalTo(AgendaMessages.get(MessageKey.FIRST_NAME_REQUIRED)))
                 .body("requestId", notNullValue())
-                .body("method", equalTo("POST"))
+                .body("method", equalTo(HttpMethod.POST))
                 .body("path", equalTo("/api/contacts"))
                 .body("status", equalTo(400))
                 .body("timestamp", notNullValue());
@@ -272,7 +273,7 @@ public class UserResourceIT {
                 .statusCode(401)
                 .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_INVALID_CREDENTIALS)))
                 .body("requestId", notNullValue())
-                .body("method", equalTo("POST"))
+                .body("method", equalTo(HttpMethod.POST))
                 .body("path", equalTo("/api/auth/login"))
                 .body("status", equalTo(401))
                 .body("timestamp", notNullValue());
@@ -293,7 +294,7 @@ public class UserResourceIT {
                 .statusCode(400)
                 .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_LOGIN_REQUIRED)))
                 .body("requestId", notNullValue())
-                .body("method", equalTo("POST"))
+                .body("method", equalTo(HttpMethod.POST))
                 .body("path", equalTo("/api/auth/login"))
                 .body("status", equalTo(400))
                 .body("timestamp", notNullValue());
@@ -373,7 +374,7 @@ public class UserResourceIT {
                 .statusCode(401)
                 .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)))
                 .body("requestId", notNullValue())
-                .body("method", equalTo("GET"))
+                .body("method", equalTo(HttpMethod.GET))
                 .body("path", equalTo("/api/users/me"))
                 .body("status", equalTo(401))
                 .body("timestamp", notNullValue());
@@ -411,7 +412,7 @@ public class UserResourceIT {
                 .statusCode(401)
                 .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)))
                 .body("requestId", notNullValue())
-                .body("method", equalTo("GET"))
+                .body("method", equalTo(HttpMethod.GET))
                 .body("path", equalTo("/api/users/me"))
                 .body("status", equalTo(401))
                 .body("timestamp", notNullValue());
@@ -454,7 +455,7 @@ public class UserResourceIT {
                 .statusCode(401)
                 .body("message", equalTo(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)))
                 .body("requestId", notNullValue())
-                .body("method", equalTo("GET"))
+                .body("method", equalTo(HttpMethod.GET))
                 .body("path", equalTo("/api/users/me"))
                 .body("status", equalTo(401))
                 .body("timestamp", notNullValue());

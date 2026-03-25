@@ -6,6 +6,7 @@ import jakarta.transaction.Transactional;
 import org.acme.adapters.keycloak.KeycloakPasswordAuthenticator;
 import org.acme.i18n.AgendaMessages;
 import org.acme.i18n.MessageKey;
+import org.acme.logging.StructuredLogFields;
 import org.acme.logging.StructuredLogContext;
 import org.jboss.logging.Logger;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -67,10 +68,10 @@ public class AuthSessionService {
         if (session.refreshTokenExpiresAt().isBefore(now)) {
             authSessionRepository.deleteById(sessionId);
             try (var ignored = StructuredLogContext.open(Map.of(
-                    "event", "auth.session.expired",
-                    "outcome", "refresh_token_expired",
-                    "sessionId", sessionId,
-                    "userId", session.user().subject()
+                    StructuredLogFields.EVENT, "auth.session.expired",
+                    StructuredLogFields.OUTCOME, "refresh_token_expired",
+                    StructuredLogFields.SESSION_ID, sessionId,
+                    StructuredLogFields.USER_ID, session.user().subject()
             ))) {
                 LOG.info("auth.session.expired");
             }
@@ -97,11 +98,11 @@ public class AuthSessionService {
             );
             SessionData savedSession = authSessionRepository.save(refreshedSession);
             try (var ignored = StructuredLogContext.open(Map.of(
-                    "event", "auth.session.refreshed",
-                    "outcome", "success",
-                    "sessionId", session.id(),
-                    "userId", refreshed.subject(),
-                    "durationMs", Duration.ofNanos(System.nanoTime() - startedAt).toMillis()
+                    StructuredLogFields.EVENT, "auth.session.refreshed",
+                    StructuredLogFields.OUTCOME, "success",
+                    StructuredLogFields.SESSION_ID, session.id(),
+                    StructuredLogFields.USER_ID, refreshed.subject(),
+                    StructuredLogFields.DURATION_MS, Duration.ofNanos(System.nanoTime() - startedAt).toMillis()
             ))) {
                 LOG.info("auth.session.refreshed");
             }
@@ -110,20 +111,20 @@ public class AuthSessionService {
             if (e.failureType() == KeycloakPasswordAuthenticator.FailureType.REFRESH_REJECTED) {
                 authSessionRepository.deleteById(sessionId);
                 try (var ignored = StructuredLogContext.open(Map.of(
-                        "event", "auth.session.refresh_failed",
-                        "outcome", "refresh_rejected",
-                        "sessionId", session.id(),
-                        "userId", session.user().subject()
+                        StructuredLogFields.EVENT, "auth.session.refresh_failed",
+                        StructuredLogFields.OUTCOME, "refresh_rejected",
+                        StructuredLogFields.SESSION_ID, session.id(),
+                        StructuredLogFields.USER_ID, session.user().subject()
                 ))) {
                     LOG.warn("auth.session.refresh_failed");
                 }
                 return Optional.empty();
             }
             try (var ignored = StructuredLogContext.open(Map.of(
-                    "event", "auth.session.refresh_failed",
-                    "outcome", "auth_provider_unavailable",
-                    "sessionId", session.id(),
-                    "userId", session.user().subject()
+                    StructuredLogFields.EVENT, "auth.session.refresh_failed",
+                    StructuredLogFields.OUTCOME, "auth_provider_unavailable",
+                    StructuredLogFields.SESSION_ID, session.id(),
+                    StructuredLogFields.USER_ID, session.user().subject()
             ))) {
                 LOG.error("auth.session.refresh_failed", e);
             }
@@ -142,9 +143,9 @@ public class AuthSessionService {
         long deleted = authSessionRepository.deleteExpiredSessions();
         if (deleted > 0) {
             try (var ignored = StructuredLogContext.open(Map.of(
-                    "event", "auth.session.cleanup.completed",
-                    "outcome", "success",
-                    "deletedSessions", deleted
+                    StructuredLogFields.EVENT, "auth.session.cleanup.completed",
+                    StructuredLogFields.OUTCOME, "success",
+                    StructuredLogFields.DELETED_SESSIONS, deleted
             ))) {
                 LOG.info("auth.session.cleanup.completed");
             }
@@ -165,10 +166,10 @@ public class AuthSessionService {
         } catch (KeycloakPasswordAuthenticator.KeycloakAuthenticationException ignored) {
             session.ifPresent(current -> {
                 try (var context = StructuredLogContext.open(Map.of(
-                        "event", "auth.logout.remote_failed",
-                        "outcome", "auth_provider_unavailable",
-                        "sessionId", current.id(),
-                        "userId", current.user().subject()
+                        StructuredLogFields.EVENT, "auth.logout.remote_failed",
+                        StructuredLogFields.OUTCOME, "auth_provider_unavailable",
+                        StructuredLogFields.SESSION_ID, current.id(),
+                        StructuredLogFields.USER_ID, current.user().subject()
                 ))) {
                     LOG.warn("auth.logout.remote_failed");
                 }

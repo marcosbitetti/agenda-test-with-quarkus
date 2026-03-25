@@ -25,7 +25,8 @@ public class HealthResource {
             dbUp = false;
         }
 
-        HealthStatus status = new HealthStatus("UP", dbUp ? "UP" : "DOWN");
+        HealthStatus.State overallStatus = dbUp ? HealthStatus.State.UP : HealthStatus.State.DOWN;
+        HealthStatus status = new HealthStatus(HealthStatus.State.UP, overallStatus);
         return Response.ok(status).build();
     }
 }

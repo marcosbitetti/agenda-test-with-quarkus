@@ -3,6 +3,7 @@ package org.acme.core;
 import io.quarkus.scheduler.Scheduled;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import org.acme.logging.StructuredLogFields;
 import org.acme.logging.StructuredLogContext;
 import org.jboss.logging.Logger;
 
@@ -20,9 +21,9 @@ public class AuthSessionCleanupJob {
     void cleanupExpiredSessions() {
         long deleted = authSessionService.cleanupExpiredSessions();
         try (var ignored = StructuredLogContext.open(Map.of(
-                "event", "auth.session.cleanup.executed",
-                "outcome", "success",
-                "deletedSessions", deleted
+                StructuredLogFields.EVENT, "auth.session.cleanup.executed",
+                StructuredLogFields.OUTCOME, "success",
+                StructuredLogFields.DELETED_SESSIONS, deleted
         ))) {
             LOG.debug("auth.session.cleanup.executed");
         }

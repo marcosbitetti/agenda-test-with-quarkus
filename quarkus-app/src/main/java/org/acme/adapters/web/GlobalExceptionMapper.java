@@ -11,6 +11,7 @@ import jakarta.ws.rs.ext.ExceptionMapper;
 import jakarta.ws.rs.ext.Provider;
 import org.acme.i18n.AgendaMessages;
 import org.acme.i18n.MessageKey;
+import org.acme.logging.StructuredLogFields;
 import org.acme.logging.StructuredLogContext;
 import org.jboss.logging.Logger;
 
@@ -29,11 +30,11 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
         boolean expectedClientError = isExpectedClientError(status);
 
         try (var ignored = StructuredLogContext.open(Map.of(
-                "event", "http.request.failed",
-                "outcome", expectedClientError ? "client_error" : "exception",
-                "httpStatus", status,
-                "exceptionType", throwable.getClass().getName(),
-                "exceptionMessage", throwable.getMessage()
+            StructuredLogFields.EVENT, "http.request.failed",
+            StructuredLogFields.OUTCOME, expectedClientError ? "client_error" : "exception",
+            StructuredLogFields.HTTP_STATUS, status,
+            StructuredLogFields.EXCEPTION_TYPE, throwable.getClass().getName(),
+            StructuredLogFields.EXCEPTION_MESSAGE, throwable.getMessage()
         ))) {
             if (expectedClientError) {
                 LOG.warnf("http.request.failed status=%s type=%s message=%s",

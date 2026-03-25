@@ -1,5 +1,6 @@
 package org.acme.adapters.web;
 
+import jakarta.ws.rs.HttpMethod;
 import jakarta.ws.rs.ServiceUnavailableException;
 import jakarta.ws.rs.core.Response;
 import org.acme.i18n.AgendaMessages;
@@ -23,7 +24,7 @@ public class GlobalExceptionMapperTest {
 
         try (var ignored = StructuredLogContext.open(Map.of(
                 "requestId", "req-500",
-                "httpMethod", "POST",
+            "httpMethod", HttpMethod.POST,
                 "requestPath", "/api/contacts"
         ))) {
             Response response = mapper.toResponse(new RuntimeException(AgendaMessages.get(MessageKey.UNEXPECTED_FAILURE)));
@@ -36,7 +37,7 @@ public class GlobalExceptionMapperTest {
             ApiErrorResponse error = (ApiErrorResponse) entity;
             assertEquals(AgendaMessages.get(MessageKey.UNEXPECTED_FAILURE), error.message());
             assertEquals("req-500", error.requestId());
-            assertEquals("POST", error.method());
+            assertEquals(HttpMethod.POST, error.method());
             assertEquals("/api/contacts", error.path());
             assertEquals(500, error.status());
             assertNotNull(error.timestamp());
@@ -50,7 +51,7 @@ public class GlobalExceptionMapperTest {
 
         try (var ignored = StructuredLogContext.open(Map.of(
                 "requestId", "req-503",
-                "httpMethod", "GET",
+            "httpMethod", HttpMethod.GET,
                 "requestPath", "/api/users/me"
         ))) {
             Response response = mapper.toResponse(new ServiceUnavailableException(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE)));
@@ -63,7 +64,7 @@ public class GlobalExceptionMapperTest {
             ApiErrorResponse error = (ApiErrorResponse) entity;
             assertEquals(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE), error.message());
             assertEquals("req-503", error.requestId());
-            assertEquals("GET", error.method());
+            assertEquals(HttpMethod.GET, error.method());
             assertEquals("/api/users/me", error.path());
             assertEquals(503, error.status());
             assertNotNull(error.timestamp());

@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import org.acme.i18n.AgendaMessages;
 import org.acme.i18n.MessageKey;
 import org.eclipse.microprofile.config.inject.ConfigProperty;
@@ -59,19 +62,21 @@ public class KeycloakPasswordAuthenticator {
         }
         try {
             HttpRequest request = HttpRequest.newBuilder(logoutEndpoint())
-                    .header("Content-Type", "application/x-www-form-urlencoded")
+                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED)
                     .timeout(Duration.ofSeconds(10))
                     .POST(HttpRequest.BodyPublishers.ofString(logoutBody(refreshToken)))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
-            if (response.statusCode() == 204 || response.statusCode() == 200) {
+            if (response.statusCode() == Response.Status.NO_CONTENT.getStatusCode()
+                || response.statusCode() == Response.Status.OK.getStatusCode()) {
                 return;
             }
 
             JsonNode body = safeReadJson(response.body());
             String error = text(body, "error");
-            if (response.statusCode() == 400 && "invalid_grant".equals(error)) {
+            if (response.statusCode() == Response.Status.BAD_REQUEST.getStatusCode()
+                && OidcError.INVALID_GRANT.matches(error)) {
                 return;
             }
 
@@ -88,7 +93,7 @@ public class KeycloakPasswordAuthenticator {
     private AuthenticatedUser requestToken(String formBody, TokenRequestType requestType) {
         try {
             HttpRequest request = HttpRequest.newBuilder(tokenEndpoint())
-                    .header("Content-Type", "application/x-www-form-urlencoded")
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED)
                     .timeout(Duration.ofSeconds(10))
                     .POST(HttpRequest.BodyPublishers.ofString(formBody))
                     .build();
@@ -108,7 +113,7 @@ public class KeycloakPasswordAuthenticator {
     private AuthenticatedUser mapResponse(HttpResponse<String> response, TokenRequestType requestType) throws IOException {
         JsonNode body = safeReadJson(response.body());
 
-        if (response.statusCode() == 200) {
+        if (response.statusCode() == Response.Status.OK.getStatusCode()) {
             String accessToken = text(body, "access_token");
             if (accessToken == null || accessToken.isBlank()) {
                 throw new IOException(AgendaMessages.get(MessageKey.KEYCLOAK_RESPONSE_MISSING_ACCESS_TOKEN));
@@ -136,15 +141,16 @@ public class KeycloakPasswordAuthenticator {
         }
 
         String error = text(body, "error");
-        if (response.statusCode() == 400 && "invalid_grant".equals(error)) {
+        if (response.statusCode() == Response.Status.BAD_REQUEST.getStatusCode()
+                && OidcError.INVALID_GRANT.matches(error)) {
             if (requestType == TokenRequestType.REFRESH) {
                 throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_REJECTED));
             }
             throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS, AgendaMessages.get(MessageKey.KEYCLOAK_INVALID_CREDENTIALS));
         }
 
-        if (response.statusCode() == 401) {
-            if ("invalid_grant".equals(error)) {
+        if (response.statusCode() == Response.Status.UNAUTHORIZED.getStatusCode()) {
+            if (OidcError.INVALID_GRANT.matches(error)) {
                 if (requestType == TokenRequestType.REFRESH) {
                     throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_REJECTED));
                 }
@@ -234,6 +240,20 @@ public class KeycloakPasswordAuthenticator {
         INVALID_CREDENTIALS,
         REFRESH_REJECTED,
         UNAVAILABLE
+    }
+
+    private enum OidcError {
+        INVALID_GRANT("invalid_grant");
+
+        private final String code;
+
+        OidcError(String code) {
+            this.code = code;
+        }
+
+        boolean matches(String value) {
+            return code.equals(value);
+        }
     }
 
     private enum TokenRequestType {

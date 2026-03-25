@@ -15,6 +15,7 @@ import org.acme.core.AuthSessionService;
 import org.acme.core.UserService;
 import org.acme.i18n.AgendaMessages;
 import org.acme.i18n.MessageKey;
+import org.acme.logging.StructuredLogFields;
 import org.acme.logging.StructuredLogContext;
 import org.jboss.logging.Logger;
 
@@ -45,9 +46,9 @@ public class AuthResource {
         LOG.debug("auth.login.received");
         if (request == null || blank(request.username()) || blank(request.password())) {
             try (var ignored = StructuredLogContext.open(Map.of(
-                    "event", "auth.login.failed",
-                    "outcome", "validation_error",
-                    "httpStatus", 400
+                    StructuredLogFields.EVENT, "auth.login.failed",
+                    StructuredLogFields.OUTCOME, "validation_error",
+                    StructuredLogFields.HTTP_STATUS, 400
             ))) {
                 LOG.warn("auth.login.failed");
             }
@@ -74,12 +75,12 @@ public class AuthResource {
 
                 long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
                 try (var ignored = StructuredLogContext.open(Map.of(
-                    "event", "auth.login.succeeded",
-                    "outcome", "success",
-                    "userId", authenticated.subject(),
-                    "sessionId", session.id(),
-                    "durationMs", durationMs,
-                    "httpStatus", 200
+                    StructuredLogFields.EVENT, "auth.login.succeeded",
+                    StructuredLogFields.OUTCOME, "success",
+                    StructuredLogFields.USER_ID, authenticated.subject(),
+                    StructuredLogFields.SESSION_ID, session.id(),
+                    StructuredLogFields.DURATION_MS, durationMs,
+                    StructuredLogFields.HTTP_STATUS, 200
                 ))) {
                 LOG.info("auth.login.succeeded");
                 }
@@ -91,10 +92,10 @@ public class AuthResource {
             if (e.failureType() == KeycloakPasswordAuthenticator.FailureType.INVALID_CREDENTIALS) {
                 long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
                 try (var ignored = StructuredLogContext.open(Map.of(
-                    "event", "auth.login.failed",
-                    "outcome", "invalid_credentials",
-                    "durationMs", durationMs,
-                    "httpStatus", 401
+                    StructuredLogFields.EVENT, "auth.login.failed",
+                    StructuredLogFields.OUTCOME, "invalid_credentials",
+                    StructuredLogFields.DURATION_MS, durationMs,
+                    StructuredLogFields.HTTP_STATUS, 401
                 ))) {
                     LOG.warn("auth.login.failed");
                 }
@@ -105,10 +106,10 @@ public class AuthResource {
 
                 long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
                 try (var ignored = StructuredLogContext.open(Map.of(
-                    "event", "auth.login.failed",
-                    "outcome", "auth_provider_unavailable",
-                    "durationMs", durationMs,
-                    "httpStatus", 503
+                    StructuredLogFields.EVENT, "auth.login.failed",
+                    StructuredLogFields.OUTCOME, "auth_provider_unavailable",
+                    StructuredLogFields.DURATION_MS, durationMs,
+                    StructuredLogFields.HTTP_STATUS, 503
                 ))) {
                 LOG.error("auth.login.failed", e);
                 }
@@ -124,10 +125,10 @@ public class AuthResource {
     public Response logout(@CookieParam(AuthSessionService.COOKIE_NAME) String sessionId) {
         authSessionService.logout(sessionId);
         try (var ignored = StructuredLogContext.open(Map.of(
-                "event", "auth.logout.succeeded",
-                "outcome", "success",
-                "sessionId", sessionId == null ? "anonymous" : sessionId,
-                "httpStatus", 204
+                StructuredLogFields.EVENT, "auth.logout.succeeded",
+                StructuredLogFields.OUTCOME, "success",
+                StructuredLogFields.SESSION_ID, sessionId == null ? "anonymous" : sessionId,
+                StructuredLogFields.HTTP_STATUS, 204
         ))) {
             LOG.info("auth.logout.succeeded");
         }
