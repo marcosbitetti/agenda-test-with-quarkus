@@ -93,7 +93,7 @@ public class ContactResource {
         LOG.debug("contacts.update.received userId=" + userContext.userId() + " contactId=" + contactId);
 
         try {
-            Optional<Contact> updated = contactService.update(
+                Optional<Contact> updated = contactService.update(
                     userContext.userId(),
                     contactId,
                     request.firstName(),
@@ -102,11 +102,9 @@ public class ContactResource {
                     request.phoneNumbers(),
                     request.relationshipDegree()
             );
-            if (updated.isEmpty()) {
-                throw new NotFoundException(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND));
-            }
-
-            return Response.ok(new ContactDto(updated.get())).build();
+                return updated
+                    .map(c -> Response.ok(new ContactDto(c)).build())
+                    .orElseThrow(() -> new NotFoundException(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND)));
         } catch (IllegalArgumentException | NullPointerException e) {
             return badRequest(e.getMessage());
         }
@@ -123,9 +121,8 @@ public class ContactResource {
             return badRequest(AgendaMessages.get(MessageKey.CONTACT_INVALID));
         }
 
-        if (contactService.findActiveByIdAndOwnerUserId(contactId, userContext.userId()).isEmpty()) {
-            throw new NotFoundException(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND));
-        }
+        contactService.findActiveByIdAndOwnerUserId(contactId, userContext.userId())
+            .orElseThrow(() -> new NotFoundException(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND)));
 
         contactService.softDelete(contactId, userContext.userId());
         return Response.noContent().build();
@@ -133,12 +130,10 @@ public class ContactResource {
 
     private UserContext authenticate(String sessionId) {
         try {
-            var session = authSessionService.findActiveSession(sessionId);
-            if (session.isEmpty()) {
-                throw new jakarta.ws.rs.NotAuthorizedException(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID));
-            }
+            var session = authSessionService.findActiveSession(sessionId)
+                    .orElseThrow(() -> new jakarta.ws.rs.NotAuthorizedException(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID)));
 
-            var currentUser = session.get().user();
+            var currentUser = session.user();
             var user = userService.findOrCreateByExternalId(
                     currentUser.subject(),
                     currentUser.username(),
