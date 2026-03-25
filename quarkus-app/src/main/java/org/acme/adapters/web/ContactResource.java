@@ -17,6 +17,7 @@ import org.acme.core.AuthSessionService;
 import org.acme.core.ContactService;
 import org.acme.core.UserService;
 import org.acme.domain.Contact;
+import org.jboss.logging.Logger;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -24,6 +25,8 @@ import java.util.Optional;
 
 @Path("/api/contacts")
 public class ContactResource {
+
+    private static final Logger LOG = Logger.getLogger(ContactResource.class);
 
     @Inject
     AuthSessionService authSessionService;
@@ -41,6 +44,7 @@ public class ContactResource {
         List<ContactDto> contacts = contactService.listActiveByOwnerUserId(userContext.userId()).stream()
                 .map(ContactDto::new)
                 .toList();
+        LOG.debug("contacts.list.completed userId=" + userContext.userId() + " count=" + contacts.size());
         return Response.ok(contacts).build();
     }
 
@@ -53,6 +57,7 @@ public class ContactResource {
         }
 
         UserContext userContext = authenticate(sessionId);
+        LOG.debug("contacts.create.received userId=" + userContext.userId());
 
         try {
             Contact contact = contactService.create(
@@ -83,6 +88,7 @@ public class ContactResource {
         }
 
         UserContext userContext = authenticate(sessionId);
+        LOG.debug("contacts.update.received userId=" + userContext.userId() + " contactId=" + contactId);
 
         try {
             Optional<Contact> updated = contactService.update(
@@ -110,6 +116,7 @@ public class ContactResource {
     public Response delete(@CookieParam(AuthSessionService.COOKIE_NAME) String sessionId,
                            @PathParam("contactId") Long contactId) {
         UserContext userContext = authenticate(sessionId);
+        LOG.debug("contacts.delete.received userId=" + userContext.userId() + " contactId=" + contactId);
         if (contactId == null) {
             return badRequest("Contato invalido.");
         }
@@ -143,7 +150,8 @@ public class ContactResource {
 
     private Response badRequest(String message) {
         return Response.status(Response.Status.BAD_REQUEST)
-                .entity(new ErrorResponse(message == null || message.isBlank() ? "Dados invalidos." : message))
+            .entity(ApiErrorResponse.current(message == null || message.isBlank() ? "Dados invalidos." : message,
+                Response.Status.BAD_REQUEST.getStatusCode()))
                 .build();
     }
 
@@ -175,8 +183,5 @@ public class ContactResource {
                     contact.relationshipDegree
             );
         }
-    }
-
-    public record ErrorResponse(String message) {
     }
 }

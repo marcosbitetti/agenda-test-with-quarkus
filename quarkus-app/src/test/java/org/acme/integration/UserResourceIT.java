@@ -103,7 +103,13 @@ public class UserResourceIT {
         given()
                 .when().get("/api/contacts")
                 .then()
-                .statusCode(401);
+                                .statusCode(401)
+                                .body("message", equalTo("Sessao invalida ou expirada."))
+                                .body("requestId", notNullValue())
+                                .body("method", equalTo("GET"))
+                                .body("path", equalTo("/api/contacts"))
+                                .body("status", equalTo(401))
+                                .body("timestamp", notNullValue());
     }
 
     @Test
@@ -181,7 +187,12 @@ public class UserResourceIT {
                         """)
                 .when().put("/api/contacts/99999")
                 .then()
-                .statusCode(404);
+                .statusCode(404)
+                .body("message", equalTo("Contato nao encontrado."))
+                .body("requestId", notNullValue())
+                .body("method", equalTo("PUT"))
+                .body("path", equalTo("/api/contacts/99999"))
+                .body("status", equalTo(404));
     }
 
     @Test
@@ -202,7 +213,12 @@ public class UserResourceIT {
                 .when().post("/api/contacts")
                 .then()
                 .statusCode(400)
-                .body("message", equalTo("Nome obrigatorio."));
+                .body("message", equalTo("Nome obrigatorio."))
+                .body("requestId", notNullValue())
+                .body("method", equalTo("POST"))
+                .body("path", equalTo("/api/contacts"))
+                .body("status", equalTo(400))
+                .body("timestamp", notNullValue());
     }
 
     @Test
@@ -252,7 +268,12 @@ public class UserResourceIT {
                 .when().post("/api/auth/login")
                 .then()
                 .statusCode(401)
-                .body("message", equalTo("Login ou senha invalidos."));
+                .body("message", equalTo("Login ou senha invalidos."))
+                .body("requestId", notNullValue())
+                .body("method", equalTo("POST"))
+                .body("path", equalTo("/api/auth/login"))
+                .body("status", equalTo(401))
+                .body("timestamp", notNullValue());
     }
 
     @Test
@@ -268,7 +289,12 @@ public class UserResourceIT {
                 .when().post("/api/auth/login")
                 .then()
                 .statusCode(400)
-                .body("message", equalTo("Informe login ou e-mail e senha."));
+                .body("message", equalTo("Informe login ou e-mail e senha."))
+                .body("requestId", notNullValue())
+                .body("method", equalTo("POST"))
+                .body("path", equalTo("/api/auth/login"))
+                .body("status", equalTo(400))
+                .body("timestamp", notNullValue());
     }
 
     @Test
@@ -342,7 +368,13 @@ public class UserResourceIT {
                 .cookie("AGENDA_SESSION", sessionCookie)
                 .when().get("/api/users/me")
                 .then()
-                .statusCode(401);
+                .statusCode(401)
+                .body("message", equalTo("Sessao invalida ou expirada."))
+                .body("requestId", notNullValue())
+                .body("method", equalTo("GET"))
+                .body("path", equalTo("/api/users/me"))
+                .body("status", equalTo(401))
+                .body("timestamp", notNullValue());
     }
 
     @Test
@@ -374,7 +406,13 @@ public class UserResourceIT {
                 .cookie("AGENDA_SESSION", sessionCookie)
                 .when().get("/api/users/me")
                 .then()
-                .statusCode(401);
+                .statusCode(401)
+                .body("message", equalTo("Sessao invalida ou expirada."))
+                .body("requestId", notNullValue())
+                .body("method", equalTo("GET"))
+                .body("path", equalTo("/api/users/me"))
+                .body("status", equalTo(401))
+                .body("timestamp", notNullValue());
 
         given()
                 .contentType("application/x-www-form-urlencoded")
@@ -411,7 +449,13 @@ public class UserResourceIT {
                 .cookie("AGENDA_SESSION", sessionCookie)
                 .when().get("/api/users/me")
                 .then()
-                .statusCode(401);
+                .statusCode(401)
+                .body("message", equalTo("Sessao invalida ou expirada."))
+                .body("requestId", notNullValue())
+                .body("method", equalTo("GET"))
+                .body("path", equalTo("/api/users/me"))
+                .body("status", equalTo(401))
+                .body("timestamp", notNullValue());
     }
 
     void expireAccessToken(String sessionId, Instant expiresAt) {

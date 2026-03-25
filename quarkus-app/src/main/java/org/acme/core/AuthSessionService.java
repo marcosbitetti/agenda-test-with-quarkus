@@ -50,11 +50,13 @@ public class AuthSessionService {
     @Transactional
     public Optional<SessionData> findActiveSession(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
+            LOG.debug("auth.session.lookup.missing_cookie");
             return Optional.empty();
         }
 
         Optional<SessionData> storedSession = authSessionRepository.findByIdForUpdate(sessionId);
         if (storedSession.isEmpty()) {
+            LOG.debugf("auth.session.lookup.not_found sessionId=%s", sessionId);
             return Optional.empty();
         }
 
@@ -74,10 +76,12 @@ public class AuthSessionService {
         }
 
         if (session.accessTokenExpiresAt().minusSeconds(refreshSkewSeconds).isAfter(now)) {
+            LOG.debugf("auth.session.lookup.hit sessionId=%s userId=%s", session.id(), session.user().subject());
             return Optional.of(session);
         }
 
         try {
+            LOG.debugf("auth.session.refresh.required sessionId=%s userId=%s", session.id(), session.user().subject());
             long startedAt = System.nanoTime();
             var refreshed = authenticator.refresh(session.refreshToken());
             SessionData refreshedSession = new SessionData(
@@ -127,6 +131,7 @@ public class AuthSessionService {
 
     public void invalidate(String sessionId) {
         if (sessionId != null && !sessionId.isBlank()) {
+            LOG.debugf("auth.session.invalidate sessionId=%s", sessionId);
             authSessionRepository.deleteById(sessionId);
         }
     }
@@ -147,9 +152,11 @@ public class AuthSessionService {
 
     public void logout(String sessionId) {
         if (sessionId == null || sessionId.isBlank()) {
+            LOG.debug("auth.logout.skipped_missing_session");
             return;
         }
 
+        LOG.debugf("auth.logout.started sessionId=%s", sessionId);
         Optional<SessionData> session = authSessionRepository.findById(sessionId);
         try {
             session.ifPresent(current -> authenticator.logout(current.refreshToken()));

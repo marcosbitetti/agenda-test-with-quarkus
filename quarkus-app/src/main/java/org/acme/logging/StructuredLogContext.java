@@ -10,6 +10,15 @@ public final class StructuredLogContext {
     private StructuredLogContext() {
     }
 
+    public static Object get(String key) {
+        return MDC.get(key);
+    }
+
+    public static String getString(String key) {
+        Object value = MDC.get(key);
+        return value == null ? null : String.valueOf(value);
+    }
+
     public static Scope open(Map<String, Object> fields) {
         return new Scope(fields);
     }

@@ -40,6 +40,7 @@ public class AuthResource {
     @Path("/login")
     public Response login(LoginRequest request) {
         long startedAt = System.nanoTime();
+        LOG.debug("auth.login.received");
         if (request == null || blank(request.username()) || blank(request.password())) {
             try (var ignored = StructuredLogContext.open(Map.of(
                     "event", "auth.login.failed",
@@ -49,7 +50,7 @@ public class AuthResource {
                 LOG.warn("auth.login.failed");
             }
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(new ErrorResponse("Informe login ou e-mail e senha."))
+                    .entity(ApiErrorResponse.current("Informe login ou e-mail e senha.", Response.Status.BAD_REQUEST.getStatusCode()))
                     .build();
         }
 
@@ -96,7 +97,7 @@ public class AuthResource {
                     LOG.warn("auth.login.failed");
                 }
                 return Response.status(Response.Status.UNAUTHORIZED)
-                        .entity(new ErrorResponse("Login ou senha invalidos."))
+                    .entity(ApiErrorResponse.current("Login ou senha invalidos.", Response.Status.UNAUTHORIZED.getStatusCode()))
                         .build();
             }
 
@@ -111,7 +112,7 @@ public class AuthResource {
                 }
 
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity(new ErrorResponse("Servico de autenticacao temporariamente indisponivel."))
+            .entity(ApiErrorResponse.current("Servico de autenticacao temporariamente indisponivel.", Response.Status.SERVICE_UNAVAILABLE.getStatusCode()))
                     .build();
         }
     }
@@ -159,8 +160,5 @@ public class AuthResource {
     }
 
     public record LoginRequest(String username, String password) {
-    }
-
-    public record ErrorResponse(String message) {
     }
 }
