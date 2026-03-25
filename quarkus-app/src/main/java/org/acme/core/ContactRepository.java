@@ -13,5 +13,7 @@ public interface ContactRepository {
 
     Contact save(Contact contact);
 
+    Optional<Contact> update(Contact contact);
+
     void softDelete(Long contactId, Long ownerUserId, OffsetDateTime updatedAt);
 }

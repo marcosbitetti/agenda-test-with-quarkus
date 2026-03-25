@@ -7,6 +7,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.acme.domain.Contact;
+import org.acme.domain.IAgendaEntity;
 
 import java.util.List;
 
@@ -41,7 +42,10 @@ public class ContactEntity extends AgendaBaseEntity {
                 firstName,
                 lastName,
                 birthDate,
-                phoneNumbers == null ? List.of() : phoneNumbers.stream().map(PhoneNumberEntity::toDomain).toList(),
+            phoneNumbers == null ? List.of() : phoneNumbers.stream()
+                .filter(phoneNumber -> phoneNumber.status == IAgendaEntity.Status.ACTIVE)
+                .map(PhoneNumberEntity::toDomain)
+                .toList(),
                 relationshipDegree,
                 createdAt,
                 updatedAt,

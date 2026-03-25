@@ -47,6 +47,38 @@ public class ContactRepositoryImpl implements ContactRepository {
     }
 
     @Override
+    public Optional<Contact> update(Contact contact) {
+        ContactEntity entity = ContactEntity.find(
+                "id = ?1 and ownerUserId = ?2 and status = ?3",
+                contact.id,
+                contact.ownerUserId,
+                IAgendaEntity.Status.ACTIVE
+        ).firstResult();
+        if (entity == null) {
+            return Optional.empty();
+        }
+
+        entity.firstName = contact.firstName;
+        entity.lastName = contact.lastName;
+        entity.birthDate = contact.birthDate;
+        entity.relationshipDegree = contact.relationshipDegree;
+        entity.updatedAt = contact.updatedAt;
+
+        if (entity.phoneNumbers != null) {
+            for (PhoneNumberEntity phoneNumber : entity.phoneNumbers) {
+                phoneNumber.status = IAgendaEntity.Status.DELETED;
+                phoneNumber.updatedAt = contact.updatedAt;
+            }
+        }
+
+        entity.phoneNumbers = contact.phoneNumbers.stream()
+                .map(phoneNumber -> PhoneNumberEntity.fromDomain(phoneNumber, entity))
+                .toList();
+
+        return Optional.of(entity.toDomain());
+    }
+
+    @Override
     public void softDelete(Long contactId, Long ownerUserId, OffsetDateTime updatedAt) {
         ContactEntity entity = ContactEntity.find(
                 "id = ?1 and ownerUserId = ?2 and status = ?3",

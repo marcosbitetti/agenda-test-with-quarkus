@@ -9,6 +9,7 @@ import org.acme.adapters.persistence.AuthSessionRepositoryImpl;
 import org.junit.jupiter.api.Test;
 
 import java.time.Instant;
+import java.util.List;
 
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.Matchers.containsString;
@@ -92,30 +93,9 @@ public class UserResourceIT {
                                 .then()
                                 .statusCode(200)
                                 .body(containsString("Minha agenda"))
-                                                                                                                                .body(containsString("hx-get=\"/api/contacts/panel\""))
-                                                                                                                                .body(containsString("/js/vendor/htmx.min.js"));
-        }
-
-        @Test
-        public void testContactsPanelRequiresSession() {
-                given()
-                                .when().get("/api/contacts/panel")
-                                .then()
-                                .statusCode(401);
-        }
-
-        @Test
-        public void testContactsPanelShowsEmptyState() {
-                String sessionCookie = loginAndExtractSessionCookie();
-
-                given()
-                                .cookie("AGENDA_SESSION", sessionCookie)
-                                .when().get("/api/contacts/panel")
-                                .then()
-                                .statusCode(200)
-                                .contentType(containsString("text/html"))
-                                .body(containsString("Nenhum contato ativo cadastrado."))
-                                .body(containsString(">0<"));
+                                .body(containsString("/js/home.js"))
+                                .body(not(containsString("/js/vendor/htmx.min.js")))
+                                .body(not(containsString("hx-get=\"/api/contacts/panel\"")));
         }
 
     @Test
@@ -159,27 +139,50 @@ public class UserResourceIT {
                 .body("[0].relationshipDegree", equalTo("Prima"));
     }
 
-        @Test
-        public void testCreateContactFromPanelRendersUpdatedHtml() {
-                String sessionCookie = loginAndExtractSessionCookie();
+    @Test
+    public void testUpdateContactWithValidPayloadReturnsUpdatedJson() {
+        String sessionCookie = loginAndExtractSessionCookie();
+        Number contactId = createContactAndExtractId(sessionCookie, "Maria", "Silva", "1992-07-10", List.of("11999990000"), "Prima");
 
-                given()
-                                .cookie("AGENDA_SESSION", sessionCookie)
-                                .contentType("application/x-www-form-urlencoded")
-                                .formParam("firstName", "Maria")
-                                .formParam("lastName", "Silva")
-                                .formParam("birthDate", "1992-07-10")
-                                .formParam("phoneNumbers", "11999990000\n1133334444")
-                                .formParam("relationshipDegree", "Prima")
-                                .when().post("/api/contacts/panel")
-                                .then()
-                                .statusCode(200)
-                                .contentType(containsString("text/html"))
-                                .body(containsString("Contato salvo com sucesso."))
-                                .body(containsString("Maria Silva"))
-                                .body(containsString("Prima"))
-                                .body(containsString(">1<"));
-        }
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "firstName": "Maria Clara",
+                          "lastName": "Oliveira",
+                          "birthDate": "1993-08-11",
+                          "phoneNumbers": ["11911112222", "1133334444"],
+                          "relationshipDegree": "Prima"
+                        }
+                        """)
+                .when().put("/api/contacts/" + contactId.longValue())
+                .then()
+                .statusCode(200)
+                .body("firstName", equalTo("Maria Clara"))
+                .body("lastName", equalTo("Oliveira"))
+                .body("phoneNumbers", hasSize(2));
+    }
+
+    @Test
+    public void testUpdateMissingContactReturns404() {
+        String sessionCookie = loginAndExtractSessionCookie();
+
+        given()
+                .cookie("AGENDA_SESSION", sessionCookie)
+                .contentType(ContentType.JSON)
+                .body("""
+                        {
+                          "firstName": "Maria Clara",
+                          "lastName": "Oliveira",
+                          "birthDate": "1993-08-11",
+                          "phoneNumbers": ["11911112222"]
+                        }
+                        """)
+                .when().put("/api/contacts/99999")
+                .then()
+                .statusCode(404);
+    }
 
     @Test
     public void testCreateContactWithInvalidPayloadReturns400() {
@@ -201,25 +204,6 @@ public class UserResourceIT {
                 .statusCode(400)
                 .body("message", equalTo("Nome obrigatorio."));
     }
-
-        @Test
-        public void testCreateContactFromPanelWithInvalidPayloadReturnsFragmentError() {
-                String sessionCookie = loginAndExtractSessionCookie();
-
-                given()
-                                .cookie("AGENDA_SESSION", sessionCookie)
-                                .contentType("application/x-www-form-urlencoded")
-                                .formParam("firstName", " ")
-                                .formParam("lastName", "Silva")
-                                .formParam("birthDate", "1992-07-10")
-                                .formParam("phoneNumbers", "11999990000")
-                                .when().post("/api/contacts/panel")
-                                .then()
-                                .statusCode(200)
-                                .contentType(containsString("text/html"))
-                                .body(containsString("Nome obrigatorio."))
-                                .body(not(containsString("Contato salvo com sucesso.")));
-        }
 
     @Test
     public void testDeleteContactSoftDeletesIt() {
@@ -253,49 +237,6 @@ public class UserResourceIT {
                 .then()
                 .statusCode(200)
                 .body("", hasSize(0));
-    }
-
-    @Test
-    public void testDeleteContactFromPanelUpdatesFragment() {
-        String sessionCookie = loginAndExtractSessionCookie();
-
-        Number contactId = given()
-                .cookie("AGENDA_SESSION", sessionCookie)
-                .contentType(ContentType.JSON)
-                .body("""
-                        {
-                          "firstName": "Carlos",
-                          "lastName": "Souza",
-                          "birthDate": "1988-03-21",
-                          "phoneNumbers": ["21988887777"]
-                        }
-                        """)
-                .when().post("/api/contacts")
-                .then()
-                .statusCode(201)
-                .extract().path("id");
-
-        given()
-                .cookie("AGENDA_SESSION", sessionCookie)
-                .when().delete("/api/contacts/panel/" + contactId.longValue())
-                .then()
-                .statusCode(200)
-                .contentType(containsString("text/html"))
-                .body(containsString("Contato excluido com sucesso."))
-                .body(containsString("Nenhum contato ativo cadastrado."));
-    }
-
-    @Test
-    public void testDeleteMissingContactFromPanelReturnsControlledFragment() {
-        String sessionCookie = loginAndExtractSessionCookie();
-
-        given()
-                .cookie("AGENDA_SESSION", sessionCookie)
-                .when().delete("/api/contacts/panel/99999")
-                .then()
-                .statusCode(200)
-                .contentType(containsString("text/html"))
-                .body(containsString("Contato nao encontrado."));
     }
 
     @Test
@@ -496,4 +437,31 @@ public class UserResourceIT {
 
                                 return loginResponse.extract().cookie("AGENDA_SESSION");
                 }
+
+                                                                Number createContactAndExtractId(String sessionCookie,
+                                                                                                 String firstName,
+                                                                                                 String lastName,
+                                                                                                 String birthDate,
+                                                                                                 List<String> phoneNumbers,
+                                                                                                 String relationshipDegree) {
+                                                                                String phonesJson = phoneNumbers.stream().map(number -> "\"" + number + "\"").collect(java.util.stream.Collectors.joining(", "));
+                                                                                String relationshipJson = relationshipDegree == null ? "null" : "\"" + relationshipDegree + "\"";
+
+                                                                                return given()
+                                                                                                                .cookie("AGENDA_SESSION", sessionCookie)
+                                                                                                                .contentType(ContentType.JSON)
+                                                                                                                .body("""
+                                                                                                                                                {
+                                                                                                                                                        "firstName": "%s",
+                                                                                                                                                        "lastName": "%s",
+                                                                                                                                                        "birthDate": "%s",
+                                                                                                                                                        "phoneNumbers": [%s],
+                                                                                                                                                        "relationshipDegree": %s
+                                                                                                                                                }
+                                                                                                                                                """.formatted(firstName, lastName, birthDate, phonesJson, relationshipJson))
+                                                                                                                .when().post("/api/contacts")
+                                                                                                                .then()
+                                                                                                                .statusCode(201)
+                                                                                                                .extract().path("id");
+                                                                }
 }

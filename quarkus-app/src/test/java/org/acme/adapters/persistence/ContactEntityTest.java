@@ -74,4 +74,43 @@ public class ContactEntityTest {
         assertEquals("11999999999", contact.phoneNumbers.get(0).number);
         assertEquals(IAgendaEntity.Status.ACTIVE, contact.status);
     }
+
+    @Test
+    public void toDomainIgnoresDeletedPhones() {
+        OffsetDateTime createdAt = OffsetDateTime.parse("2026-03-25T10:15:30Z");
+        OffsetDateTime updatedAt = OffsetDateTime.parse("2026-03-25T12:30:00Z");
+        ContactEntity entity = new ContactEntity();
+        entity.id = 10L;
+        entity.ownerUserId = 1L;
+        entity.firstName = "Maria";
+        entity.lastName = "Silva";
+        entity.birthDate = LocalDate.of(1990, 5, 20);
+        entity.relationshipDegree = "Irma";
+        entity.createdAt = createdAt;
+        entity.updatedAt = updatedAt;
+        entity.status = IAgendaEntity.Status.ACTIVE;
+
+        PhoneNumberEntity activePhone = new PhoneNumberEntity();
+        activePhone.id = 20L;
+        activePhone.number = "11999999999";
+        activePhone.createdAt = createdAt;
+        activePhone.updatedAt = updatedAt;
+        activePhone.status = IAgendaEntity.Status.ACTIVE;
+        activePhone.contact = entity;
+
+        PhoneNumberEntity deletedPhone = new PhoneNumberEntity();
+        deletedPhone.id = 21L;
+        deletedPhone.number = "11888887777";
+        deletedPhone.createdAt = createdAt;
+        deletedPhone.updatedAt = updatedAt;
+        deletedPhone.status = IAgendaEntity.Status.DELETED;
+        deletedPhone.contact = entity;
+
+        entity.phoneNumbers = List.of(activePhone, deletedPhone);
+
+        Contact contact = entity.toDomain();
+
+        assertEquals(1, contact.phoneNumbers.size());
+        assertEquals("11999999999", contact.phoneNumbers.get(0).number);
+    }
 }

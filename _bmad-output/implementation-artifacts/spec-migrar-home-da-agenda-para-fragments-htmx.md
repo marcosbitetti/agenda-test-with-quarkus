@@ -4,6 +4,8 @@ type: 'refactor'
 created: '2026-03-25T10:30:00Z'
 status: 'done'
 baseline_commit: '236b9bcda9d72f6c2201cc6456082bacc3c859ae'
+superseded_on: '2026-03-25'
+superseded_by: 'home-estatica-com-adapter-web-json-only'
 context:
   - 'quarkus-app/ARCHITECTURE.md'
   - 'docs/observability.md'
@@ -36,6 +38,12 @@ context:
 
 </frozen-after-approval>
 
+## Status Update
+
+Este artefato fica mantido apenas como registro historico da decisao tomada naquele momento.
+
+Em 2026-03-25, a arquitetura da agenda de contatos foi corrigida para um frontend estatico consumindo apenas a API JSON autenticada. A implementacao corrente nao usa mais fragments HTMX renderizados no backend, nem endpoints HTML em `ContactResource`.
+
 ## Code Map
 
 - `quarkus-app/src/main/java/org/acme/adapters/web/IndexResource.java` -- entrega a home autenticada; pode passar a servir uma versão menos dependente de JS.
@@ -58,6 +66,8 @@ context:
 - Given payload inválido ou contato inexistente, when a ação HTMX falhar, then a página deve continuar utilizável e mostrar feedback local sem expor stack trace.
 
 ## Spec Change Log
+
+- 2026-03-25: spec marcado como superado pela direcao `home-estatica-com-adapter-web-json-only`; manter apenas como historico.
 
 ## Design Notes
 

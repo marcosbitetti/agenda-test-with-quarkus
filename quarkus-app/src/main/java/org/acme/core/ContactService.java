@@ -51,6 +51,39 @@ public class ContactService {
     }
 
     @Transactional
+    public Optional<Contact> update(Long ownerUserId,
+                                    Long contactId,
+                                    String firstName,
+                                    String lastName,
+                                    LocalDate birthDate,
+                                    List<String> phoneNumbers,
+                                    String relationshipDegree) {
+        Objects.requireNonNull(ownerUserId, "Usuario dono obrigatorio.");
+        Objects.requireNonNull(contactId, "Contato obrigatorio.");
+
+        Optional<Contact> existing = contactRepository.findActiveByIdAndOwnerUserId(contactId, ownerUserId);
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+
+        Contact current = existing.get();
+        OffsetDateTime now = OffsetDateTime.now();
+        Contact updated = new Contact(
+                current.id,
+                current.ownerUserId,
+                firstName,
+                lastName,
+                birthDate,
+                buildPhoneNumbers(phoneNumbers, now),
+                relationshipDegree,
+                current.createdAt,
+                now,
+                current.status
+        );
+        return contactRepository.update(updated);
+    }
+
+    @Transactional
     public void softDelete(Long contactId, Long ownerUserId) {
         contactRepository.softDelete(contactId, ownerUserId, OffsetDateTime.now());
     }

@@ -17,6 +17,7 @@ import java.util.Optional;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -85,5 +86,68 @@ public class ContactServiceTest {
         ArgumentCaptor<OffsetDateTime> captor = ArgumentCaptor.forClass(OffsetDateTime.class);
         verify(contactRepository).softDelete(org.mockito.ArgumentMatchers.eq(5L), org.mockito.ArgumentMatchers.eq(10L), captor.capture());
         assertNotNull(captor.getValue());
+    }
+
+    @Test
+    public void updateExistingContactRebuildsPhonesAndPreservesIdentity() {
+        OffsetDateTime createdAt = OffsetDateTime.now().minusDays(1);
+        Contact existing = new Contact(
+                5L,
+                10L,
+                "Maria",
+                "Silva",
+                LocalDate.of(1990, 5, 20),
+                List.of(new org.acme.domain.PhoneNumber(1L, "11999990000", createdAt, createdAt, IAgendaEntity.Status.ACTIVE)),
+                "Irma",
+                createdAt,
+                createdAt,
+                IAgendaEntity.Status.ACTIVE
+        );
+
+        when(contactRepository.findActiveByIdAndOwnerUserId(5L, 10L)).thenReturn(Optional.of(existing));
+        when(contactRepository.update(any(Contact.class))).thenAnswer(invocation -> Optional.of(invocation.getArgument(0)));
+
+        Optional<Contact> updated = contactService.update(
+                10L,
+                5L,
+                "Maria Clara",
+                "Oliveira",
+                LocalDate.of(1993, 8, 11),
+                List.of("11911112222", "1133334444"),
+                "Prima"
+        );
+
+        assertTrue(updated.isPresent());
+        assertEquals(5L, updated.orElseThrow().id);
+        assertEquals(10L, updated.orElseThrow().ownerUserId);
+        assertEquals("Maria Clara", updated.orElseThrow().firstName);
+        assertEquals("Oliveira", updated.orElseThrow().lastName);
+        assertEquals(2, updated.orElseThrow().phoneNumbers.size());
+        verify(contactRepository).update(any(Contact.class));
+    }
+
+    @Test
+    public void updateMissingContactReturnsEmpty() {
+        when(contactRepository.findActiveByIdAndOwnerUserId(5L, 10L)).thenReturn(Optional.empty());
+
+        Optional<Contact> updated = contactService.update(
+                10L,
+                5L,
+                "Maria",
+                "Silva",
+                LocalDate.of(1990, 5, 20),
+                List.of("11999990000"),
+                null
+        );
+
+        assertEquals(Optional.empty(), updated);
+    }
+
+    @Test
+    public void updateRejectsNullOwner() {
+        NullPointerException error = assertThrows(NullPointerException.class,
+                () -> contactService.update(null, 5L, "Maria", "Silva", LocalDate.now(), List.of("11999990000"), null));
+
+        assertEquals("Usuario dono obrigatorio.", error.getMessage());
     }
 }
