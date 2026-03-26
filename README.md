@@ -1,5 +1,14 @@
 # Agenda Project
 
+Arquitetura
+--
+
+Diagrama C1 com a visao de contexto do sistema:
+
+![Diagrama C1 do sistema Agenda](docs/c1-system-context.svg)
+
+Video do app rodando: https://youtu.be/5at07y3Ndtw
+
 Quickstart
 --
 

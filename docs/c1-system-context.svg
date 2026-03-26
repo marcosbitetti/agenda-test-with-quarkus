@@ -1,0 +1,377 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   width="1200"
+   height="760"
+   viewBox="0 0 1200 760"
+   role="img"
+   aria-labelledby="title desc"
+   version="1.1"
+   id="svg30"
+   sodipodi:docname="c1-system-context.svg"
+   inkscape:version="1.4.2 (ebf0e940d0, 2025-05-08)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview30"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="1.365"
+     inkscape:cx="599.2674"
+     inkscape:cy="496.7033"
+     inkscape:window-width="2560"
+     inkscape:window-height="1014"
+     inkscape:window-x="0"
+     inkscape:window-y="29"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg30" />
+  <title
+     id="title">Agenda - Diagrama C1</title>
+  <desc
+     id="desc">Diagrama de contexto do sistema Agenda mostrando usuario, sistema principal, autenticacao com Keycloak, persistencia em PostgreSQL e observabilidade com Loki e Grafana.</desc>
+  <defs
+     id="defs1">
+    <style
+       id="style1">
+      .title { font: 700 30px Arial, sans-serif; fill: #0f172a; }
+      .subtitle { font: 400 16px Arial, sans-serif; fill: #334155; }
+      .label { font: 700 18px Arial, sans-serif; fill: #0f172a; }
+      .text { font: 400 15px Arial, sans-serif; fill: #334155; }
+      .small { font: 400 13px Arial, sans-serif; fill: #475569; }
+      .person { fill: #dbeafe; stroke: #2563eb; stroke-width: 2; }
+      .system { fill: #dcfce7; stroke: #16a34a; stroke-width: 2.5; }
+      .external { fill: #fff7ed; stroke: #ea580c; stroke-width: 2; }
+      .note { fill: #f8fafc; stroke: #94a3b8; stroke-width: 1.5; stroke-dasharray: 6 4; }
+      .arrow { stroke: #475569; stroke-width: 2.5; fill: none; marker-end: url(#arrowHead); }
+      .boundary { fill: #f8fafc; stroke: #cbd5e1; stroke-width: 2; rx: 24; }
+    </style>
+    <marker
+       id="arrowHead"
+       markerWidth="10"
+       markerHeight="10"
+       refX="9"
+       refY="5"
+       orient="auto">
+      <path
+         d="M 0 0 L 10 5 L 0 10 z"
+         fill="#475569"
+         id="path1" />
+    </marker>
+  </defs>
+  <rect
+     width="1200"
+     height="760"
+     fill="#f8fafc"
+     id="rect1" />
+  <text
+     x="60"
+     y="60"
+     class="title"
+     id="text1">Agenda - Contexto do Sistema (C1)</text>
+  <text
+     x="60"
+     y="88"
+     class="subtitle"
+     id="text2">Visao de alto nivel de quem usa o sistema e com quais plataformas ele interage.</text>
+  <rect
+     x="300"
+     y="130"
+     width="610"
+     height="500"
+     class="boundary"
+     id="rect2" />
+  <text
+     x="330"
+     y="165"
+     class="small"
+     id="text3">Escopo analisado</text>
+  <g
+     transform="translate(70,270)"
+     id="g8">
+    <circle
+       cx="70"
+       cy="20"
+       r="20"
+       class="person"
+       id="circle3" />
+    <line
+       x1="70"
+       y1="40"
+       x2="70"
+       y2="95"
+       class="person"
+       id="line3" />
+    <line
+       x1="35"
+       y1="60"
+       x2="105"
+       y2="60"
+       class="person"
+       id="line4" />
+    <line
+       x1="70"
+       y1="95"
+       x2="35"
+       y2="140"
+       class="person"
+       id="line5" />
+    <line
+       x1="70"
+       y1="95"
+       x2="105"
+       y2="140"
+       class="person"
+       id="line6" />
+    <text
+       x="0"
+       y="180"
+       class="label"
+       id="text6">Usuario autenticado</text>
+    <text
+       x="-5"
+       y="205"
+       class="text"
+       id="text7">Acessa a agenda pelo navegador,</text>
+    <text
+       x="-15"
+       y="226"
+       class="text"
+       id="text8">consulta, cria, edita e remove contatos.</text>
+  </g>
+  <g
+     transform="translate(410,245)"
+     id="g15">
+    <rect
+       x="-0.0036382093"
+       y="-0.0036382093"
+       width="366.08786"
+       height="302.75452"
+       rx="28.000536"
+       class="system"
+       id="rect8" />
+    <text
+       x="28"
+       y="42"
+       class="label"
+       id="text9">Sistema Agenda</text>
+    <text
+       x="28"
+       y="74"
+       class="text"
+       id="text10">Aplicacao Quarkus com frontend estatico</text>
+    <text
+       x="28"
+       y="96"
+       class="text"
+       id="text11">e API JSON autenticada por cookie.</text>
+    <rect
+       x="28"
+       y="124"
+       width="315.2088"
+       height="125.69963"
+       rx="18"
+       fill="#ffffff"
+       stroke="#86efac"
+       stroke-width="1.5"
+       id="rect11" />
+    <text
+       x="46"
+       y="152"
+       class="small"
+       id="text12">Responsabilidades principais</text>
+    <text
+       x="46"
+       y="178"
+       class="text"
+       id="text13">1. Renderizar a home e consumir a API</text>
+    <text
+       x="46"
+       y="200"
+       class="text"
+       id="text14">2. Gerenciar sessao local e refresh</text>
+    <text
+       x="46"
+       y="222"
+       class="text"
+       id="text15">3. Manter contatos e telefones da agenda</text>
+  </g>
+  <g
+     transform="translate(930,150)"
+     id="g18">
+    <rect
+       x="0"
+       y="0"
+       width="210"
+       height="115"
+       rx="24"
+       class="external"
+       id="rect15" />
+    <text
+       x="22"
+       y="38"
+       class="label"
+       id="text16">Keycloak</text>
+    <text
+       x="22"
+       y="66"
+       class="text"
+       id="text17">Provedor de identidade</text>
+    <text
+       x="4.4175825"
+       y="91.663002"
+       class="text"
+       id="text18"
+       style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:15px;line-height:normal;font-family:Arial, sans-serif">para login, logout e federacao.</text>
+  </g>
+  <g
+     transform="translate(930,325)"
+     id="g21">
+    <rect
+       x="0"
+       y="0"
+       width="210"
+       height="115"
+       rx="24"
+       class="external"
+       id="rect18" />
+    <text
+       x="22"
+       y="38"
+       class="label"
+       id="text19">PostgreSQL</text>
+    <text
+       x="22"
+       y="66"
+       class="text"
+       id="text20">Armazena contatos,</text>
+    <text
+       x="22"
+       y="88"
+       class="text"
+       id="text21">telefones e sessoes locais.</text>
+  </g>
+  <g
+     transform="translate(930,500)"
+     id="g24">
+    <rect
+       x="0"
+       y="0"
+       width="210"
+       height="115"
+       rx="24"
+       class="external"
+       id="rect21" />
+    <text
+       x="22"
+       y="38"
+       class="label"
+       id="text22">Loki + Grafana</text>
+    <text
+       x="22"
+       y="66"
+       class="text"
+       id="text23">Observabilidade local para</text>
+    <text
+       x="22"
+       y="88"
+       class="text"
+       id="text24">consultar eventos e logs.</text>
+  </g>
+  <path
+     d="M 190 360 C 260 360, 320 360, 410 360"
+     class="arrow"
+     id="path24" />
+  <text
+     x="215"
+     y="342"
+     class="small"
+     id="text25">Usa a agenda pelo browser</text>
+  <path
+     d="M 790 300 C 850 270, 875 240, 930 208"
+     class="arrow"
+     id="path25" />
+  <text
+     x="792.23444"
+     y="218.21979"
+     class="small"
+     id="text26"
+     style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:13px;line-height:normal;font-family:Arial, sans-serif"><tspan
+       sodipodi:role="line"
+       id="tspan34"
+       x="792.23444"
+       y="218.21979">Autentica e</tspan><tspan
+       sodipodi:role="line"
+       id="tspan35"
+       x="792.23444"
+       y="234.46979">encerra sessao</tspan></text>
+  <path
+     d="M 790 370 C 850 380, 875 380, 930 382"
+     class="arrow"
+     id="path26" />
+  <text
+     x="788.35162"
+     y="346.46155"
+     class="small"
+     id="text27"
+     style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:13px;line-height:normal;font-family:Arial, sans-serif"><tspan
+       sodipodi:role="line"
+       id="tspan30"
+       x="788.35162"
+       y="346.46155">Le e grava dados</tspan><tspan
+       sodipodi:role="line"
+       id="tspan31"
+       x="788.35162"
+       y="362.71155">de negocio</tspan></text>
+  <path
+     d="M 790 440 C 850 475, 875 510, 930 558"
+     class="arrow"
+     id="path27" />
+  <text
+     x="785.22345"
+     y="536.50183"
+     class="small"
+     id="text28"
+     style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:13px;line-height:normal;font-family:Arial, sans-serif"><tspan
+       sodipodi:role="line"
+       id="tspan32"
+       x="785.22345"
+       y="536.50183">Emite logs para</tspan><tspan
+       sodipodi:role="line"
+       id="tspan33"
+       x="785.22345"
+       y="552.75183">consulta operacional</tspan></text>
+  <rect
+     x="60"
+     y="660"
+     width="1080"
+     height="62"
+     rx="18"
+     class="note"
+     id="rect28" />
+  <text
+     x="85"
+     y="690"
+     class="text"
+     id="text29"
+     style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:15px;line-height:normal;font-family:Arial, sans-serif"><tspan
+       sodipodi:role="line"
+       id="tspan36"
+       x="85"
+       y="690">Leitura C1: o foco esta nas relacoes externas do sistema. Detalhes internos como recursos REST, frontend, banco por tabela e containers</tspan><tspan
+       sodipodi:role="line"
+       id="tspan37"
+       x="85"
+       y="708.75">Docker ficam para C2/C3.</tspan></text>
+  <text
+     x="269.61539"
+     y="706.87177"
+     class="small"
+     id="text30"
+     style="font-style:normal;font-variant:normal;font-weight:400;font-stretch:normal;font-size:13px;line-height:normal;font-family:Arial, sans-serif">Baseado em: docker-compose, README do projeto, ARCHITECTURE.md e docs/observability.md.</text>
+</svg>
