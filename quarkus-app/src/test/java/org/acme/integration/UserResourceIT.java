@@ -15,6 +15,7 @@ import java.time.Instant;
 import java.util.List;
 
 import static io.restassured.RestAssured.given;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
@@ -104,6 +105,29 @@ public class UserResourceIT {
     }
 
     @Test
+    public void testCreateContactSanitizesPhoneNumbersBeforeSavingToDatabase() {
+        String sessionCookie = loginAndExtractSessionCookie();
+
+        Number contactId = given().cookie("AGENDA_SESSION", sessionCookie).contentType(ContentType.JSON).body("""
+                {
+                  "firstName": "Maria",
+                  "lastName": "Silva",
+                  "birthDate": "1992-07-10",
+                  "phoneNumbers": ["(12) 98859-8514", "11 3333-4444"],
+                  "relationshipDegree": "Prima"
+                }
+                """).when().post("/api/contacts").then().statusCode(201).body("phoneNumbers[0]", equalTo("12988598514"))
+                .body("phoneNumbers[1]", equalTo("1133334444")).extract().path("id");
+
+        given().cookie("AGENDA_SESSION", sessionCookie).when().get("/api/contacts").then().statusCode(200)
+                .body("[0].phoneNumbers[0]", equalTo("12988598514"))
+                .body("[0].phoneNumbers[1]", equalTo("1133334444"));
+
+        assertEquals(List.of("12988598514", "1133334444"),
+                authSessionTestSupport.findActivePhoneNumbers(contactId.longValue()));
+    }
+
+    @Test
     public void testUpdateContactWithValidPayloadReturnsUpdatedJson() {
         String sessionCookie = loginAndExtractSessionCookie();
         Number contactId = createContactAndExtractId(sessionCookie, "Maria", "Silva", "1992-07-10",
@@ -120,6 +144,48 @@ public class UserResourceIT {
                 """).when().put("/api/contacts/" + contactId.longValue()).then().statusCode(200)
                 .body("firstName", equalTo("Maria Clara")).body("lastName", equalTo("Oliveira"))
                 .body("phoneNumbers", hasSize(2));
+    }
+
+    @Test
+    public void testUpdateContactSanitizesPhoneNumbersBeforeSavingToDatabase() {
+        String sessionCookie = loginAndExtractSessionCookie();
+        Number contactId = createContactAndExtractId(sessionCookie, "Maria", "Silva", "1992-07-10",
+                List.of("11999990000"), "Prima");
+
+        given().cookie("AGENDA_SESSION", sessionCookie).contentType(ContentType.JSON).body("""
+                {
+                  "firstName": "Maria Clara",
+                  "lastName": "Oliveira",
+                  "birthDate": "1993-08-11",
+                  "phoneNumbers": ["(12) 98859-8514", "11 3333-4444"],
+                  "relationshipDegree": "Prima"
+                }
+                """).when().put("/api/contacts/" + contactId.longValue()).then().statusCode(200)
+                .body("phoneNumbers[0]", equalTo("12988598514"))
+                .body("phoneNumbers[1]", equalTo("1133334444"));
+
+        given().cookie("AGENDA_SESSION", sessionCookie).when().get("/api/contacts").then().statusCode(200)
+                .body("[0].phoneNumbers[0]", equalTo("12988598514"))
+                .body("[0].phoneNumbers[1]", equalTo("1133334444"));
+
+        assertEquals(List.of("12988598514", "1133334444"),
+                authSessionTestSupport.findActivePhoneNumbers(contactId.longValue()));
+    }
+
+    @Test
+    public void testCreateContactRejectsPhoneWithoutDigitsAfterSanitization() {
+        String sessionCookie = loginAndExtractSessionCookie();
+
+        given().cookie("AGENDA_SESSION", sessionCookie).contentType(ContentType.JSON).body("""
+                {
+                  "firstName": "Maria",
+                  "lastName": "Silva",
+                  "birthDate": "1992-07-10",
+                  "phoneNumbers": ["( ) -"],
+                  "relationshipDegree": "Prima"
+                }
+                """).when().post("/api/contacts").then().statusCode(400)
+                .body("message", equalTo(AgendaMessages.get(MessageKey.PHONE_REQUIRED)));
     }
 
     @Test

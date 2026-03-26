@@ -42,6 +42,27 @@ public class ContactRequestMapperTest {
     }
 
     @Test
+    public void sanitizePhoneNumbersToDigitsOnly() {
+        CreateContactRequest request = new CreateContactRequest("Maria", "Silva", LocalDate.of(1992, 7, 10),
+                List.of("(12) 98859-8514", " 11 3333-4444 "), "Prima");
+
+        ContactWriteInput input = ContactRequestMapper.toWriteInput(request);
+
+        assertEquals(List.of("12988598514", "1133334444"), input.phoneNumbers());
+    }
+
+    @Test
+    public void rejectPhoneNumberWithoutDigitsAfterSanitization() {
+        CreateContactRequest request = new CreateContactRequest("Maria", "Silva", LocalDate.of(1992, 7, 10),
+                List.of("( ) -"), "Prima");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> ContactRequestMapper.toWriteInput(request));
+
+        assertEquals(AgendaMessages.get(MessageKey.PHONE_REQUIRED), error.getMessage());
+    }
+
+    @Test
     public void rejectNullRequest() {
         NullPointerException error = assertThrows(NullPointerException.class,
                 () -> ContactRequestMapper.toWriteInput(null));

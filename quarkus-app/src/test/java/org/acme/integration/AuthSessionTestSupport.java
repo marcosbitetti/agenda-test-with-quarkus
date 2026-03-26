@@ -7,8 +7,10 @@ import org.acme.adapters.persistence.AuthSessionEntity;
 import org.acme.adapters.persistence.ContactEntity;
 import org.acme.adapters.persistence.PhoneNumberEntity;
 import org.acme.core.AuthSessionService;
+import org.acme.domain.IAgendaEntity;
 
 import java.time.Instant;
+import java.util.List;
 
 @ApplicationScoped
 public class AuthSessionTestSupport {
@@ -40,5 +42,16 @@ public class AuthSessionTestSupport {
     public void clearContacts() {
         PhoneNumberEntity.deleteAll();
         ContactEntity.deleteAll();
+    }
+
+    @Transactional
+    public List<String> findActivePhoneNumbers(Long contactId) {
+        ContactEntity entity = ContactEntity.findById(contactId);
+        if (entity == null || entity.phoneNumbers == null) {
+            return List.of();
+        }
+
+        return entity.phoneNumbers.stream().filter(phoneNumber -> phoneNumber.status == IAgendaEntity.Status.ACTIVE)
+                .map(phoneNumber -> phoneNumber.number).toList();
     }
 }

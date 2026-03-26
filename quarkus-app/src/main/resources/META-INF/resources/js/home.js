@@ -7,6 +7,7 @@
   const refreshUserButton = document.getElementById('refresh-user');
   const logoutButton = document.getElementById('logout-button');
   const contactsPanel = document.getElementById('contacts-panel');
+  const formatPhoneNumberForDisplay = window.AgendaPhoneFormatter?.formatPhoneNumberForDisplay ?? (value => String(value ?? ''));
 
   const state = {
     contacts: [],
@@ -78,6 +79,10 @@
     return phoneNumbers.join('\n');
   }
 
+  function joinFormattedPhoneNumbers(phoneNumbers) {
+    return phoneNumbers.map(formatPhoneNumberForDisplay).join('\n');
+  }
+
   function splitPhoneNumbers(value) {
     return value
       .split(/\r?\n/)
@@ -110,7 +115,7 @@
                 </div>
                 ${contact.relationshipDegree ? `<p class="text-sm text-stone-500">Parentesco: ${escapeHtml(contact.relationshipDegree)}</p>` : ''}
                 <div class="flex flex-wrap gap-2">
-                  ${contact.phoneNumbers.map(number => `<span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">${escapeHtml(number)}</span>`).join('')}
+                  ${contact.phoneNumbers.map(number => `<span class="rounded-full bg-stone-100 px-3 py-1 text-xs font-medium text-stone-700">${escapeHtml(formatPhoneNumberForDisplay(number))}</span>`).join('')}
                 </div>
               </div>
               <div class="flex flex-wrap gap-2">
@@ -240,7 +245,7 @@
           firstName: contact.firstName,
           lastName: contact.lastName,
           birthDate: contact.birthDate,
-          phoneNumbers: joinPhoneNumbers(contact.phoneNumbers),
+          phoneNumbers: joinFormattedPhoneNumbers(contact.phoneNumbers),
           relationshipDegree: contact.relationshipDegree || '',
         };
         renderContactsPanel();

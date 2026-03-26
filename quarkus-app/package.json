@@ -8,6 +8,7 @@
   },
   "scripts": {
     "build:css": "npx tailwindcss -i ./src/main/resources/META-INF/resources/css/input.css -o ./src/main/resources/META-INF/resources/css/tailwind.css --minify",
-    "watch:css": "npx tailwindcss -i ./src/main/resources/META-INF/resources/css/input.css -o ./src/main/resources/META-INF/resources/css/tailwind.css --watch"
+    "watch:css": "npx tailwindcss -i ./src/main/resources/META-INF/resources/css/input.css -o ./src/main/resources/META-INF/resources/css/tailwind.css --watch",
+    "test:js": "node --test ./src/test/frontend/**/*.test.js"
   }
 }
