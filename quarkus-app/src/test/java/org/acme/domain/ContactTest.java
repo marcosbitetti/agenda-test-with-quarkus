@@ -57,6 +57,41 @@ public class ContactTest {
     }
 
     @Test
+    public void projectPhoneNumberValues() {
+        OffsetDateTime createdAt = OffsetDateTime.parse("2026-03-25T10:15:30Z");
+        OffsetDateTime updatedAt = OffsetDateTime.parse("2026-03-25T12:30:00Z");
+        Contact result = new Contact(null, 1L, "Joao", "Souza", LocalDate.of(1988, 1, 10),
+                List.of(new PhoneNumber(null, "11999999999", createdAt, updatedAt, Status.ACTIVE),
+                        new PhoneNumber(null, "1133334444", createdAt, updatedAt, Status.ACTIVE)),
+                null, createdAt, updatedAt, Status.ACTIVE);
+
+        assertEquals(List.of("11999999999", "1133334444"), result.phoneNumberValues());
+    }
+
+    @Test
+    public void createActivePhoneNumbersFromValues() {
+        OffsetDateTime now = OffsetDateTime.parse("2026-03-25T12:30:00Z");
+
+        List<PhoneNumber> result = Contact.createActivePhoneNumbers(List.of("11999999999", "1133334444"), now);
+
+        assertEquals(2, result.size());
+        assertEquals("11999999999", result.get(0).getNumber());
+        assertEquals(now, result.get(0).getCreatedAt());
+        assertEquals(now, result.get(0).getUpdatedAt());
+        assertEquals(Status.ACTIVE, result.get(0).getStatus());
+    }
+
+    @Test
+    public void rejectEmptyActivePhoneNumbersSource() {
+        OffsetDateTime now = OffsetDateTime.parse("2026-03-25T12:30:00Z");
+
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
+                () -> Contact.createActivePhoneNumbers(List.of(), now));
+
+        assertEquals(AgendaMessages.get(MessageKey.PHONE_REQUIRED), error.getMessage());
+    }
+
+    @Test
     public void rejectMissingFirstName() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
                 () -> new Contact(null, 1L, " ", "Souza", LocalDate.now(),

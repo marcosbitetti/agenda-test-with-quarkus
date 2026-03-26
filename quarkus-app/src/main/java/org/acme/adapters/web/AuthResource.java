@@ -11,6 +11,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import org.acme.adapters.keycloak.KeycloakPasswordAuthenticator;
+import org.acme.core.AuthLoginInput;
 import org.acme.core.AuthSessionService;
 import org.acme.core.UserService;
 import org.acme.i18n.AgendaMessages;
@@ -44,27 +45,18 @@ public class AuthResource {
     public Response login(LoginRequest request) {
         long startedAt = System.nanoTime();
         LOG.debug("auth.login.received");
-        if (request == null || blank(request.username()) || blank(request.password())) {
-            try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.login.failed",
-                    StructuredLogFields.OUTCOME, "validation_error", StructuredLogFields.HTTP_STATUS, 400))) {
-                LOG.warn("auth.login.failed");
-            }
-            return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_LOGIN_REQUIRED),
-                            Response.Status.BAD_REQUEST.getStatusCode()))
-                    .build();
+        AuthLoginInput input;
+        try {
+            input = LoginRequestMapper.toInput(request);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            return invalidLoginRequestResponse();
         }
 
         try {
-            var authenticated = authenticator.authenticate(request.username().trim(), request.password());
+            var authenticated = authenticator.authenticate(input.username(), input.password());
             var user = userService.findOrCreateByExternalId(authenticated.subject(), authenticated.username(),
                     authenticated.email());
-
-            var session = authSessionService.createSession(
-                    new AuthSessionService.UserSession(authenticated.subject(), authenticated.username(),
-                            authenticated.email()),
-                    authenticated.accessToken(), authenticated.accessTokenExpiresAt(), authenticated.refreshToken(),
-                    authenticated.refreshTokenExpiresAt());
+            var session = authSessionService.createSession(AuthSessionCreateInputMapper.toInput(authenticated));
 
             long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
             try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.login.succeeded",
@@ -74,7 +66,7 @@ public class AuthResource {
                 LOG.info("auth.login.succeeded");
             }
 
-            return Response.ok(new UserDto(user)).cookie(sessionCookie(session.id(), session.refreshTokenExpiresAt()))
+            return Response.ok(UserMapper.toDto(user)).cookie(sessionCookie(session.id(), session.refreshTokenExpiresAt()))
                     .build();
         } catch (KeycloakPasswordAuthenticator.KeycloakAuthenticationException e) {
             if (e.failureType() == KeycloakPasswordAuthenticator.FailureType.INVALID_CREDENTIALS) {
@@ -104,6 +96,17 @@ public class AuthResource {
         }
     }
 
+    private Response invalidLoginRequestResponse() {
+        try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.login.failed",
+                StructuredLogFields.OUTCOME, "validation_error", StructuredLogFields.HTTP_STATUS, 400))) {
+            LOG.warn("auth.login.failed");
+        }
+        return Response.status(Response.Status.BAD_REQUEST)
+                .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_LOGIN_REQUIRED),
+                        Response.Status.BAD_REQUEST.getStatusCode()))
+                .build();
+    }
+
     @DELETE
     @Path("/session")
     public Response logout(@CookieParam(AuthSessionService.COOKIE_NAME) String sessionId) {
@@ -125,12 +128,5 @@ public class AuthResource {
     private NewCookie expiredSessionCookie() {
         return new NewCookie.Builder(AuthSessionService.COOKIE_NAME).value("").path("/").httpOnly(true)
                 .sameSite(NewCookie.SameSite.LAX).maxAge(0).build();
-    }
-
-    private boolean blank(String value) {
-        return value == null || value.isBlank();
-    }
-
-    public record LoginRequest(String username, String password) {
     }
 }

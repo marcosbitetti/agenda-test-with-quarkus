@@ -37,8 +37,9 @@ public class ContactServiceTest {
     public void createContactBuildsActivePhonesAndPersists() {
         when(contactRepository.save(any(Contact.class))).thenAnswer(invocation -> invocation.getArgument(0));
 
-        Contact result = contactService.create(10L, "Maria", "Silva", LocalDate.of(1990, 5, 20),
-                List.of("11999999999", "1133334444"), "Irma");
+        Contact result = contactService.create(10L,
+            new ContactWriteInput("Maria", "Silva", LocalDate.of(1990, 5, 20),
+                List.of("11999999999", "1133334444"), "Irma"));
 
         assertNotNull(result);
         assertEquals(10L, result.getOwnerUserId());
@@ -52,7 +53,8 @@ public class ContactServiceTest {
     @Test
     public void createContactRejectsNullOwner() {
         NullPointerException error = assertThrows(NullPointerException.class,
-                () -> contactService.create(null, "Maria", "Silva", LocalDate.now(), List.of("11999999999"), null));
+            () -> contactService.create(null,
+                new ContactWriteInput("Maria", "Silva", LocalDate.now(), List.of("11999999999"), null)));
 
         assertEquals(AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED), error.getMessage());
     }
@@ -97,8 +99,9 @@ public class ContactServiceTest {
         when(contactRepository.update(any(Contact.class)))
                 .thenAnswer(invocation -> Optional.of(invocation.getArgument(0)));
 
-        Optional<Contact> updated = contactService.update(10L, 5L, "Maria Clara", "Oliveira", LocalDate.of(1993, 8, 11),
-                List.of("11911112222", "1133334444"), "Prima");
+        Optional<Contact> updated = contactService.update(10L, 5L,
+            new ContactWriteInput("Maria Clara", "Oliveira", LocalDate.of(1993, 8, 11),
+                List.of("11911112222", "1133334444"), "Prima"));
 
         assertTrue(updated.isPresent());
         assertEquals(5L, updated.orElseThrow().getId());
@@ -113,8 +116,8 @@ public class ContactServiceTest {
     public void updateMissingContactReturnsEmpty() {
         when(contactRepository.findActiveByIdAndOwnerUserId(5L, 10L)).thenReturn(Optional.empty());
 
-        Optional<Contact> updated = contactService.update(10L, 5L, "Maria", "Silva", LocalDate.of(1990, 5, 20),
-                List.of("11999990000"), null);
+        Optional<Contact> updated = contactService.update(10L, 5L,
+            new ContactWriteInput("Maria", "Silva", LocalDate.of(1990, 5, 20), List.of("11999990000"), null));
 
         assertEquals(Optional.empty(), updated);
     }
@@ -122,7 +125,8 @@ public class ContactServiceTest {
     @Test
     public void updateRejectsNullOwner() {
         NullPointerException error = assertThrows(NullPointerException.class,
-                () -> contactService.update(null, 5L, "Maria", "Silva", LocalDate.now(), List.of("11999990000"), null));
+                () -> contactService.update(null, 5L,
+                        new ContactWriteInput("Maria", "Silva", LocalDate.now(), List.of("11999990000"), null)));
 
         assertEquals(AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED), error.getMessage());
     }

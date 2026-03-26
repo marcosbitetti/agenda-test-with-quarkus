@@ -40,7 +40,7 @@ public class UserResource {
             var user = userService.findOrCreateByExternalId(currentUser.subject(), currentUser.username(),
                     currentUser.email());
             LOG.debugf("users.me.completed subject=%s username=%s", currentUser.subject(), currentUser.username());
-            return Response.ok(new UserDto(user)).build();
+            return Response.ok(UserMapper.toDto(user)).build();
         } catch (AuthSessionService.SessionUnavailableException e) {
             throw new ServiceUnavailableException(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE));
         }

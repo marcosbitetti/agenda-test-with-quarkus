@@ -36,6 +36,21 @@ public final class Contact extends AgendaEntity {
         return firstName + " " + lastName;
     }
 
+    public List<String> phoneNumberValues() {
+        return phoneNumbers.stream().map(PhoneNumber::getNumber).toList();
+    }
+
+    public static List<PhoneNumber> createActivePhoneNumbers(final List<String> phoneNumbersParam,
+            final OffsetDateTime timestamp) {
+        Objects.requireNonNull(phoneNumbersParam, AgendaMessages.get(MessageKey.PHONE_REQUIRED));
+        if (phoneNumbersParam.isEmpty()) {
+            throw new IllegalArgumentException(AgendaMessages.get(MessageKey.PHONE_REQUIRED));
+        }
+        return phoneNumbersParam.stream()
+                .map(number -> new PhoneNumber(null, number, timestamp, timestamp, IAgendaEntity.Status.ACTIVE))
+                .toList();
+    }
+
     private String requireText(final String value, final String message) {
         Objects.requireNonNull(value, message);
         String trimmed = value.trim();

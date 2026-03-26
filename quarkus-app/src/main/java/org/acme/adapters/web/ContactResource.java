@@ -16,14 +16,11 @@ import jakarta.ws.rs.core.Response;
 import org.acme.core.AuthSessionService;
 import org.acme.core.ContactService;
 import org.acme.core.UserService;
-import org.acme.domain.Contact;
 import org.acme.i18n.AgendaMessages;
 import org.acme.i18n.MessageKey;
 import org.jboss.logging.Logger;
 
-import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 @Path("/api/contacts")
 public class ContactResource {
@@ -43,8 +40,7 @@ public class ContactResource {
     @Produces(MediaType.APPLICATION_JSON)
     public Response list(@CookieParam(AuthSessionService.COOKIE_NAME) String sessionId) {
         UserContext userContext = authenticate(sessionId);
-        List<ContactDto> contacts = contactService.listActiveByOwnerUserId(userContext.userId()).stream()
-                .map(ContactDto::new).toList();
+        List<ContactDto> contacts = ContactMapper.toDtos(contactService.listActiveByOwnerUserId(userContext.userId()));
         LOG.debug("contacts.list.completed userId=" + userContext.userId() + " count=" + contacts.size());
         return Response.ok(contacts).build();
     }
@@ -62,9 +58,10 @@ public class ContactResource {
         LOG.debug("contacts.create.received userId=" + userContext.userId());
 
         try {
-            Contact contact = contactService.create(userContext.userId(), request.firstName(), request.lastName(),
-                    request.birthDate(), request.phoneNumbers(), request.relationshipDegree());
-            return Response.status(Response.Status.CREATED).entity(new ContactDto(contact)).build();
+            var input = ContactRequestMapper.toWriteInput(request);
+            return Response.status(Response.Status.CREATED)
+                    .entity(ContactMapper.toDto(contactService.create(userContext.userId(), input)))
+                .build();
         } catch (IllegalArgumentException | NullPointerException e) {
             return badRequest(e.getMessage());
         }
@@ -84,9 +81,10 @@ public class ContactResource {
         LOG.debug("contacts.update.received userId=" + userContext.userId() + " contactId=" + contactId);
 
         try {
-            Optional<Contact> updated = contactService.update(userContext.userId(), contactId, request.firstName(),
-                    request.lastName(), request.birthDate(), request.phoneNumbers(), request.relationshipDegree());
-            return updated.map(c -> Response.ok(new ContactDto(c)).build())
+            var input = ContactRequestMapper.toWriteInput(request);
+            return contactService.update(userContext.userId(), contactId, input)
+                .map(ContactMapper::toDto)
+                .map(dto -> Response.ok(dto).build())
                     .orElseThrow(() -> new NotFoundException(AgendaMessages.get(MessageKey.CONTACT_NOT_FOUND)));
         } catch (IllegalArgumentException | NullPointerException e) {
             return badRequest(e.getMessage());
@@ -136,18 +134,5 @@ public class ContactResource {
     }
 
     record UserContext(Long userId) {
-    }
-
-    public record CreateContactRequest(String firstName, String lastName, LocalDate birthDate,
-            List<String> phoneNumbers, String relationshipDegree) {
-    }
-
-    public record ContactDto(Long id, String firstName, String lastName, String fullName, LocalDate birthDate,
-            List<String> phoneNumbers, String relationshipDegree) {
-        public ContactDto(Contact contact) {
-            this(contact.getId(), contact.getFirstName(), contact.getLastName(), contact.fullName(),
-                    contact.getBirthDate(), contact.getPhoneNumbers().stream().map(phoneNumber -> phoneNumber.getNumber()).toList(),
-                    contact.getRelationshipDegree());
-        }
     }
 }

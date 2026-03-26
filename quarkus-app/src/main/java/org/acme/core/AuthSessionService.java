@@ -32,11 +32,10 @@ public class AuthSessionService {
     @ConfigProperty(name = "agenda.auth.refresh-skew-seconds", defaultValue = "15")
     long refreshSkewSeconds;
 
-    public SessionData createSession(UserSession user, String accessToken, Instant accessTokenExpiresAt,
-            String refreshToken, Instant refreshTokenExpiresAt) {
+    public SessionData createSession(AuthSessionCreateInput input) {
         String sessionId = UUID.randomUUID().toString();
-        SessionData session = new SessionData(sessionId, user, accessToken, accessTokenExpiresAt, refreshToken,
-                refreshTokenExpiresAt, Instant.now());
+        SessionData session = new SessionData(sessionId, input.user(), input.accessToken(),
+                input.accessTokenExpiresAt(), input.refreshToken(), input.refreshTokenExpiresAt(), Instant.now());
         return authSessionRepository.save(session);
     }
 
