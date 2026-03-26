@@ -13,7 +13,6 @@ public class HealthStatus {
     }
 
     public enum State {
-        UP,
-        DOWN
+        UP, DOWN
     }
 }

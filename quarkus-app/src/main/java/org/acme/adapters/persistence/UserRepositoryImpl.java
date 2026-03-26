@@ -8,16 +8,16 @@ import java.util.Optional;
 import java.util.Objects;
 
 @ApplicationScoped
-public class UserRepositoryImpl implements UserRepository {
+public final class UserRepositoryImpl implements UserRepository {
 
     @Override
-    public Optional<User> findByExternalId(String externalId) {
+    public Optional<User> findByExternalId(final String externalId) {
         UserEntity e = UserEntity.find("externalId", externalId).firstResult();
         return Optional.ofNullable(e).map(UserEntity::toDomain);
     }
 
     @Override
-    public User save(User user) {
+    public User save(final User user) {
         UserEntity e = UserEntity.fromDomain(user);
         e.createdAt = Objects.requireNonNullElse(e.createdAt, java.time.OffsetDateTime.now());
         e.persist();
@@ -25,12 +25,14 @@ public class UserRepositoryImpl implements UserRepository {
     }
 
     @Override
-    public User update(User user) {
-        UserEntity e = UserEntity.findById(user.id);
-        if (e == null) return save(user);
+    public User update(final User user) {
+        UserEntity e = UserEntity.findById(user.getId());
+        if (e == null) {
+            return save(user);
+        }
 
-        e.username = user.username;
-        e.email = user.email;
+        e.username = user.getUsername();
+        e.email = user.getEmail();
         return e.toDomain();
     }
 }

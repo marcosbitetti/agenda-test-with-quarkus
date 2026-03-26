@@ -57,7 +57,7 @@ public class PhoneNumberTest {
     @Test
     public void rejectInvalidStatus() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-            () -> new PhoneNumber(1L, "11999999999", null, null, null));
+                () -> new PhoneNumber(1L, "11999999999", null, null, null));
 
         assertEquals(AgendaMessages.get(MessageKey.STATUS_INVALID), error.getMessage());
     }

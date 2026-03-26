@@ -8,12 +8,13 @@ public class UserDto {
     public String username;
     public String email;
 
-    public UserDto() {}
+    public UserDto() {
+    }
 
     public UserDto(User u) {
-        this.id = u.id;
-        this.externalId = u.externalId;
-        this.username = u.username;
-        this.email = u.email;
+        this.id = u.getId();
+        this.externalId = u.getExternalId();
+        this.username = u.getUsername();
+        this.email = u.getEmail();
     }
 }

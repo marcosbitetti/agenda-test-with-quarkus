@@ -20,11 +20,8 @@ public class AuthSessionCleanupJob {
     @Scheduled(every = "${agenda.auth.cleanup-interval:30m}")
     void cleanupExpiredSessions() {
         long deleted = authSessionService.cleanupExpiredSessions();
-        try (var ignored = StructuredLogContext.open(Map.of(
-                StructuredLogFields.EVENT, "auth.session.cleanup.executed",
-                StructuredLogFields.OUTCOME, "success",
-                StructuredLogFields.DELETED_SESSIONS, deleted
-        ))) {
+        try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.session.cleanup.executed",
+                StructuredLogFields.OUTCOME, "success", StructuredLogFields.DELETED_SESSIONS, deleted))) {
             LOG.debug("auth.session.cleanup.executed");
         }
     }

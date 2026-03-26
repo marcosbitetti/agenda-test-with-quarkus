@@ -40,8 +40,7 @@ public class IndexResource {
             return serveLoginPage();
         } catch (AuthSessionService.SessionUnavailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity(AgendaMessages.get(MessageKey.AUTH_SESSION_VALIDATION_FAILED))
-                    .build();
+                    .entity(AgendaMessages.get(MessageKey.AUTH_SESSION_VALIDATION_FAILED)).build();
         }
     }
 
@@ -56,8 +55,7 @@ public class IndexResource {
             return serveHomeShell();
         } catch (AuthSessionService.SessionUnavailableException e) {
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-                    .entity(AgendaMessages.get(MessageKey.AUTH_SESSION_VALIDATION_FAILED))
-                    .build();
+                    .entity(AgendaMessages.get(MessageKey.AUTH_SESSION_VALIDATION_FAILED)).build();
         }
     }
 
@@ -79,10 +77,11 @@ public class IndexResource {
 
     private Response servePage(String resourceName) {
         // Try classpath resource first
-        try (InputStream is = Thread.currentThread().getContextClassLoader().getResourceAsStream("META-INF/resources/" + resourceName)) {
+        try (InputStream is = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream("META-INF/resources/" + resourceName)) {
             if (is != null) {
-                String html = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))
-                        .lines().collect(Collectors.joining("\n"));
+                String html = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8)).lines()
+                        .collect(Collectors.joining("\n"));
                 return Response.ok(html).build();
             }
         } catch (IOException ignored) {
@@ -95,10 +94,12 @@ public class IndexResource {
                 String html = Files.readString(p, StandardCharsets.UTF_8);
                 return Response.ok(html).build();
             } catch (IOException e) {
-                return Response.serverError().entity(AgendaMessages.format(MessageKey.PAGE_READ_ERROR, e.getMessage())).build();
+                return Response.serverError().entity(AgendaMessages.format(MessageKey.PAGE_READ_ERROR, e.getMessage()))
+                        .build();
             }
         }
 
-        return Response.status(Response.Status.NOT_FOUND).entity(AgendaMessages.format(MessageKey.PAGE_NOT_FOUND, resourceName)).build();
+        return Response.status(Response.Status.NOT_FOUND)
+                .entity(AgendaMessages.format(MessageKey.PAGE_NOT_FOUND, resourceName)).build();
     }
 }

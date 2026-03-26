@@ -27,56 +27,54 @@ import java.util.Base64;
 public class KeycloakPasswordAuthenticator {
 
     @ConfigProperty(name = "agenda.keycloak.base-url")
-    String keycloakBaseUrl;
+    private String keycloakBaseUrl;
 
     @ConfigProperty(name = "agenda.keycloak.realm")
     String realm;
 
     @ConfigProperty(name = "agenda.keycloak.client-id")
-    String clientId;
+    private String clientId;
 
     @ConfigProperty(name = "agenda.keycloak.client-secret")
-    String clientSecret;
+    private String clientSecret;
 
     @Inject
-    ObjectMapper objectMapper;
+    private ObjectMapper objectMapper;
 
-    private final HttpClient httpClient = HttpClient.newBuilder()
-            .connectTimeout(Duration.ofSeconds(5))
-            .build();
+    private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(5)).build();
 
-    public AuthenticatedUser authenticate(String username, String password) {
+    public AuthenticatedUser authenticate(final String username, final String password) {
         return requestToken(formBody(username, password), TokenRequestType.PASSWORD);
     }
 
-    public AuthenticatedUser refresh(String refreshToken) {
+    public AuthenticatedUser refresh(final String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
-            throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_MISSING));
+            throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED,
+                    AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_MISSING));
         }
         return requestToken(refreshBody(refreshToken), TokenRequestType.REFRESH);
     }
 
-    public void logout(String refreshToken) {
+    public void logout(final String refreshToken) {
         if (refreshToken == null || refreshToken.isBlank()) {
             return;
         }
         try {
             HttpRequest request = HttpRequest.newBuilder(logoutEndpoint())
-                .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED)
-                    .timeout(Duration.ofSeconds(10))
-                    .POST(HttpRequest.BodyPublishers.ofString(logoutBody(refreshToken)))
+                    .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED)
+                    .timeout(Duration.ofSeconds(10)).POST(HttpRequest.BodyPublishers.ofString(logoutBody(refreshToken)))
                     .build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             if (response.statusCode() == Response.Status.NO_CONTENT.getStatusCode()
-                || response.statusCode() == Response.Status.OK.getStatusCode()) {
+                    || response.statusCode() == Response.Status.OK.getStatusCode()) {
                 return;
             }
 
             JsonNode body = safeReadJson(response.body());
             String error = text(body, "error");
             if (response.statusCode() == Response.Status.BAD_REQUEST.getStatusCode()
-                && OidcError.INVALID_GRANT.matches(error)) {
+                    && OidcError.INVALID_GRANT.matches(error)) {
                 return;
             }
 
@@ -84,33 +82,37 @@ public class KeycloakPasswordAuthenticator {
                     AgendaMessages.get(MessageKey.KEYCLOAK_LOGOUT_FAILED));
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_LOGOUT_INTERRUPTED), e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
+                    AgendaMessages.get(MessageKey.KEYCLOAK_LOGOUT_INTERRUPTED), e);
         } catch (IOException e) {
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_LOGOUT_COMMUNICATION_FAILED), e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
+                    AgendaMessages.get(MessageKey.KEYCLOAK_LOGOUT_COMMUNICATION_FAILED), e);
         }
     }
 
-    private AuthenticatedUser requestToken(String formBody, TokenRequestType requestType) {
+    private AuthenticatedUser requestToken(final String formBody, final TokenRequestType requestType) {
         try {
             HttpRequest request = HttpRequest.newBuilder(tokenEndpoint())
                     .header(HttpHeaders.CONTENT_TYPE, MediaType.APPLICATION_FORM_URLENCODED)
-                    .timeout(Duration.ofSeconds(10))
-                    .POST(HttpRequest.BodyPublishers.ofString(formBody))
-                    .build();
+                    .timeout(Duration.ofSeconds(10)).POST(HttpRequest.BodyPublishers.ofString(formBody)).build();
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
             return mapResponse(response, requestType);
         } catch (ConnectException e) {
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_UNAVAILABLE), e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
+                    AgendaMessages.get(MessageKey.KEYCLOAK_UNAVAILABLE), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_AUTH_INTERRUPTED), e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
+                    AgendaMessages.get(MessageKey.KEYCLOAK_AUTH_INTERRUPTED), e);
         } catch (IOException e) {
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_COMMUNICATION_FAILED), e);
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
+                    AgendaMessages.get(MessageKey.KEYCLOAK_COMMUNICATION_FAILED), e);
         }
     }
 
-    private AuthenticatedUser mapResponse(HttpResponse<String> response, TokenRequestType requestType) throws IOException {
+    private AuthenticatedUser mapResponse(final HttpResponse<String> response, final TokenRequestType requestType)
+            throws IOException {
         JsonNode body = safeReadJson(response.body());
 
         if (response.statusCode() == Response.Status.OK.getStatusCode()) {
@@ -129,41 +131,40 @@ public class KeycloakPasswordAuthenticator {
             if (subject == null || subject.isBlank()) {
                 throw new IOException(AgendaMessages.get(MessageKey.KEYCLOAK_TOKEN_MISSING_SUBJECT));
             }
-            return new AuthenticatedUser(
-                    subject,
-                    text(claims, "preferred_username"),
-                    text(claims, "email"),
-                    accessToken,
-                    Instant.now().plusSeconds(expiresIn),
-                    refreshToken,
-                    Instant.now().plusSeconds(refreshExpiresIn)
-            );
+            return new AuthenticatedUser(subject, text(claims, "preferred_username"), text(claims, "email"),
+                    accessToken, Instant.now().plusSeconds(expiresIn), refreshToken,
+                    Instant.now().plusSeconds(refreshExpiresIn));
         }
 
         String error = text(body, "error");
         if (response.statusCode() == Response.Status.BAD_REQUEST.getStatusCode()
                 && OidcError.INVALID_GRANT.matches(error)) {
             if (requestType == TokenRequestType.REFRESH) {
-                throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_REJECTED));
+                throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED,
+                        AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_REJECTED));
             }
-            throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS, AgendaMessages.get(MessageKey.KEYCLOAK_INVALID_CREDENTIALS));
+            throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS,
+                    AgendaMessages.get(MessageKey.KEYCLOAK_INVALID_CREDENTIALS));
         }
 
         if (response.statusCode() == Response.Status.UNAUTHORIZED.getStatusCode()) {
             if (OidcError.INVALID_GRANT.matches(error)) {
                 if (requestType == TokenRequestType.REFRESH) {
-                    throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED, AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_REJECTED));
+                    throw new KeycloakAuthenticationException(FailureType.REFRESH_REJECTED,
+                            AgendaMessages.get(MessageKey.KEYCLOAK_REFRESH_TOKEN_REJECTED));
                 }
-                throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS, AgendaMessages.get(MessageKey.KEYCLOAK_INVALID_CREDENTIALS));
+                throw new KeycloakAuthenticationException(FailureType.INVALID_CREDENTIALS,
+                        AgendaMessages.get(MessageKey.KEYCLOAK_INVALID_CREDENTIALS));
             }
-            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE, AgendaMessages.get(MessageKey.KEYCLOAK_CLIENT_REJECTED));
+            throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
+                    AgendaMessages.get(MessageKey.KEYCLOAK_CLIENT_REJECTED));
         }
 
         throw new KeycloakAuthenticationException(FailureType.UNAVAILABLE,
                 AgendaMessages.format(MessageKey.KEYCLOAK_STATUS_RESPONSE, response.statusCode()));
     }
 
-    private JsonNode decodeClaims(String accessToken) throws IOException {
+    private JsonNode decodeClaims(final String accessToken) throws IOException {
         if (accessToken == null || accessToken.isBlank()) {
             throw new IOException(AgendaMessages.get(MessageKey.KEYCLOAK_JWT_MISSING));
         }
@@ -176,7 +177,7 @@ public class KeycloakPasswordAuthenticator {
         return objectMapper.readTree(decoded);
     }
 
-    private JsonNode safeReadJson(String payload) throws IOException {
+    private JsonNode safeReadJson(final String payload) throws IOException {
         if (payload == null || payload.isBlank()) {
             return objectMapper.createObjectNode();
         }
@@ -197,49 +198,36 @@ public class KeycloakPasswordAuthenticator {
         return URI.create(normalizedBase + "/realms/" + realm + "/protocol/openid-connect/logout");
     }
 
-    private String formBody(String username, String password) {
-        return "grant_type=password"
-                + "&client_id=" + encode(clientId)
-                + "&client_secret=" + encode(clientSecret)
-                + "&username=" + encode(username)
-                + "&password=" + encode(password);
+    private String formBody(final String username, final String password) {
+        return "grant_type=password" + "&client_id=" + encode(clientId) + "&client_secret=" + encode(clientSecret)
+                + "&username=" + encode(username) + "&password=" + encode(password);
     }
 
-    private String refreshBody(String refreshToken) {
-        return "grant_type=refresh_token"
-                + "&client_id=" + encode(clientId)
-                + "&client_secret=" + encode(clientSecret)
+    private String refreshBody(final String refreshToken) {
+        return "grant_type=refresh_token" + "&client_id=" + encode(clientId) + "&client_secret=" + encode(clientSecret)
                 + "&refresh_token=" + encode(refreshToken);
     }
 
-    private String logoutBody(String refreshToken) {
-        return "client_id=" + encode(clientId)
-                + "&client_secret=" + encode(clientSecret)
-                + "&refresh_token=" + encode(refreshToken);
+    private String logoutBody(final String refreshToken) {
+        return "client_id=" + encode(clientId) + "&client_secret=" + encode(clientSecret) + "&refresh_token="
+                + encode(refreshToken);
     }
 
-    private String encode(String value) {
+    private String encode(final String value) {
         return URLEncoder.encode(value, StandardCharsets.UTF_8);
     }
 
-    private String text(JsonNode json, String fieldName) {
+    private String text(final JsonNode json, final String fieldName) {
         JsonNode value = json.get(fieldName);
         return value == null || value.isNull() ? null : value.asText();
     }
 
-    public record AuthenticatedUser(String subject,
-                                    String username,
-                                    String email,
-                                    String accessToken,
-                                    Instant accessTokenExpiresAt,
-                                    String refreshToken,
-                                    Instant refreshTokenExpiresAt) {
+    public record AuthenticatedUser(String subject, String username, String email, String accessToken,
+            Instant accessTokenExpiresAt, String refreshToken, Instant refreshTokenExpiresAt) {
     }
 
     public enum FailureType {
-        INVALID_CREDENTIALS,
-        REFRESH_REJECTED,
-        UNAVAILABLE
+        INVALID_CREDENTIALS, REFRESH_REJECTED, UNAVAILABLE
     }
 
     private enum OidcError {
@@ -247,8 +235,8 @@ public class KeycloakPasswordAuthenticator {
 
         private final String code;
 
-        OidcError(String code) {
-            this.code = code;
+        OidcError(String codeParam) {
+            this.code = codeParam;
         }
 
         boolean matches(String value) {
@@ -257,8 +245,7 @@ public class KeycloakPasswordAuthenticator {
     }
 
     private enum TokenRequestType {
-        PASSWORD,
-        REFRESH
+        PASSWORD, REFRESH
     }
 
     public static class KeycloakAuthenticationException extends RuntimeException {

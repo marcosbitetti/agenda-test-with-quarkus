@@ -27,4 +27,20 @@ public abstract class AgendaBaseEntity extends PanacheEntityBase {
     @Convert(converter = AgendaStatusConverter.class)
     @Column(name = "status", nullable = false)
     public IAgendaEntity.Status status;
+
+    public Long getId() {
+        return id;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public OffsetDateTime getUpdatedAt() {
+        return updatedAt;
+    }
+
+    public IAgendaEntity.Status getStatus() {
+        return status;
+    }
 }

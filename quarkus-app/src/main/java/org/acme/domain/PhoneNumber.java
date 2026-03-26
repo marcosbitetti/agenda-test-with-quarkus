@@ -6,19 +6,16 @@ import org.acme.i18n.MessageKey;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
-public class PhoneNumber extends AgendaEntity {
+public final class PhoneNumber extends AgendaEntity {
     private String number;
 
     public PhoneNumber() {
     }
 
-    public PhoneNumber(final Long id,
-                       final String number,
-                       final OffsetDateTime createdAt,
-                       final OffsetDateTime updatedAt,
-                       final Status status) {
-        super(id, createdAt, updatedAt, status);
-        this.number = requireText(number, AgendaMessages.get(MessageKey.PHONE_REQUIRED));
+    public PhoneNumber(final Long idParam, final String numberParam, final OffsetDateTime createdAtParam,
+            final OffsetDateTime updatedAtParam, final Status statusParam) {
+        super(idParam, createdAtParam, updatedAtParam, statusParam);
+        this.number = requireText(numberParam, AgendaMessages.get(MessageKey.PHONE_REQUIRED));
     }
 
     private String requireText(final String value, final String message) {

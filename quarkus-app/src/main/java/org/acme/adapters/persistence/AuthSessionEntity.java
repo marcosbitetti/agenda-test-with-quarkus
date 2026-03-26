@@ -12,8 +12,7 @@ import java.time.Instant;
 
 @Entity
 @Table(name = "auth_sessions", indexes = {
-    @jakarta.persistence.Index(name = "idx_auth_sessions_refresh_expires_at", columnList = "refresh_token_expires_at")
-})
+        @jakarta.persistence.Index(name = "idx_auth_sessions_refresh_expires_at", columnList = "refresh_token_expires_at") })
 public class AuthSessionEntity extends PanacheEntityBase {
 
     @Id
@@ -49,15 +48,9 @@ public class AuthSessionEntity extends PanacheEntityBase {
     public long version;
 
     public AuthSessionService.SessionData toDomain() {
-        return new AuthSessionService.SessionData(
-                sessionId,
-                new AuthSessionService.UserSession(subject, username, email),
-                accessToken,
-                accessTokenExpiresAt,
-                refreshToken,
-                refreshTokenExpiresAt,
-                createdAt
-        );
+        return new AuthSessionService.SessionData(sessionId,
+                new AuthSessionService.UserSession(subject, username, email), accessToken, accessTokenExpiresAt,
+                refreshToken, refreshTokenExpiresAt, createdAt);
     }
 
     public static AuthSessionEntity fromDomain(AuthSessionService.SessionData sessionData) {

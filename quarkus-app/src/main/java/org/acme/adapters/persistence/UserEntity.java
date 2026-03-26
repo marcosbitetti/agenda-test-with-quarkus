@@ -32,11 +32,11 @@ public class UserEntity extends PanacheEntityBase {
 
     public static UserEntity fromDomain(User u) {
         UserEntity e = new UserEntity();
-        e.id = u.id;
-        e.externalId = u.externalId;
-        e.username = u.username;
-        e.email = u.email;
-        e.createdAt = u.createdAt;
+        e.id = u.getId();
+        e.externalId = u.getExternalId();
+        e.username = u.getUsername();
+        e.email = u.getEmail();
+        e.createdAt = u.getCreatedAt();
         return e;
     }
 }

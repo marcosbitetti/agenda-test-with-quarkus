@@ -46,7 +46,8 @@ public class HttpRequestLoggingFilter implements ContainerRequestFilter, Contain
         String query = requestContext.getUriInfo().getRequestUri().getQuery();
         String requestPath = query == null || query.isBlank() ? path : path + "?" + query;
         String clientIp = resolveClientIp(requestContext);
-        String userAgent = Optional.ofNullable(requestContext.getHeaderString(HttpHeaders.USER_AGENT)).orElse(UNKNOWN_VALUE);
+        String userAgent = Optional.ofNullable(requestContext.getHeaderString(HttpHeaders.USER_AGENT))
+                .orElse(UNKNOWN_VALUE);
 
         Map<String, Object> fields = new LinkedHashMap<>();
         fields.put(StructuredLogFields.REQUEST_ID, requestId);
@@ -61,35 +62,29 @@ public class HttpRequestLoggingFilter implements ContainerRequestFilter, Contain
         requestContext.setProperty(REQUEST_STARTED_AT_PROPERTY, startedAt);
         requestContext.setProperty(REQUEST_STARTED_NANOS_PROPERTY, startedNanos);
 
-        try (var ignored = StructuredLogContext.open(Map.of(
-        StructuredLogFields.EVENT, "http.request.started",
-        StructuredLogFields.OUTCOME, "in_progress"
-        ))) {
+        try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "http.request.started",
+                StructuredLogFields.OUTCOME, "in_progress"))) {
             LOG.info("http.request.started");
-            LOG.debugf("http.request.started method=%s path=%s ip=%s userAgent=%s", method, requestPath, clientIp, userAgent);
+            LOG.debugf("http.request.started method=%s path=%s ip=%s userAgent=%s", method, requestPath, clientIp,
+                    userAgent);
         }
     }
 
     @Override
-    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext) throws IOException {
+    public void filter(ContainerRequestContext requestContext, ContainerResponseContext responseContext)
+            throws IOException {
         Instant finishedAt = Instant.now();
         Instant startedAt = (Instant) requestContext.getProperty(REQUEST_STARTED_AT_PROPERTY);
         Long startedNanos = (Long) requestContext.getProperty(REQUEST_STARTED_NANOS_PROPERTY);
         long durationMs = startedNanos == null ? -1L : Duration.ofNanos(System.nanoTime() - startedNanos).toMillis();
 
-        try (var ignored = StructuredLogContext.open(Map.of(
-            StructuredLogFields.EVENT, "http.request.completed",
-            StructuredLogFields.OUTCOME, responseContext.getStatus() >= 400 ? "error" : "success",
-            StructuredLogFields.HTTP_STATUS, responseContext.getStatus(),
-            StructuredLogFields.REQUEST_FINISHED_AT, finishedAt.toString(),
-            StructuredLogFields.DURATION_MS, durationMs
-        ))) {
+        try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "http.request.completed",
+                StructuredLogFields.OUTCOME, responseContext.getStatus() >= 400 ? "error" : "success",
+                StructuredLogFields.HTTP_STATUS, responseContext.getStatus(), StructuredLogFields.REQUEST_FINISHED_AT,
+                finishedAt.toString(), StructuredLogFields.DURATION_MS, durationMs))) {
             LOG.info("http.request.completed");
             LOG.debugf("http.request.completed status=%d durationMs=%d startedAt=%s finishedAt=%s",
-                    responseContext.getStatus(),
-                    durationMs,
-                    startedAt,
-                    finishedAt);
+                    responseContext.getStatus(), durationMs, startedAt, finishedAt);
         } finally {
             Object scope = requestContext.getProperty(REQUEST_SCOPE_PROPERTY);
             if (scope instanceof StructuredLogContext.Scope structuredScope) {
@@ -104,7 +99,8 @@ public class HttpRequestLoggingFilter implements ContainerRequestFilter, Contain
             return forwardedFor.split(",")[0].trim();
         }
 
-        if (routingContext != null && routingContext.request() != null && routingContext.request().remoteAddress() != null) {
+        if (routingContext != null && routingContext.request() != null
+                && routingContext.request().remoteAddress() != null) {
             return routingContext.request().remoteAddress().hostAddress();
         }
 

@@ -16,11 +16,12 @@ public abstract class AgendaEntity implements IAgendaEntity {
     protected AgendaEntity() {
     }
 
-    protected AgendaEntity(final Long id, final OffsetDateTime createdAt, final OffsetDateTime updatedAt, final Status status) {
-        this.id = id;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.status = requireStatus(status);
+    protected AgendaEntity(final Long idParam, final OffsetDateTime createdAtParam, final OffsetDateTime updatedAtParam,
+            final Status statusParam) {
+        this.id = idParam;
+        this.createdAt = createdAtParam;
+        this.updatedAt = updatedAtParam;
+        this.status = requireStatus(statusParam);
     }
 
     @Override
@@ -49,16 +50,17 @@ public abstract class AgendaEntity implements IAgendaEntity {
     }
 
     @Override
-    public void softDelete(final OffsetDateTime updatedAt) {
-        OffsetDateTime timestamp = Objects.requireNonNull(updatedAt, AgendaMessages.get(MessageKey.UPDATED_AT_REQUIRED));
+    public void softDelete(final OffsetDateTime updatedAtParam) {
+        OffsetDateTime timestamp = Objects.requireNonNull(updatedAtParam,
+                AgendaMessages.get(MessageKey.UPDATED_AT_REQUIRED));
         this.status = Status.DELETED;
         this.updatedAt = timestamp;
     }
 
-    protected Status requireStatus(final Status status) {
-        if (status == null) {
+    protected Status requireStatus(final Status statusParam) {
+        if (statusParam == null) {
             throw new IllegalArgumentException(AgendaMessages.get(MessageKey.STATUS_INVALID));
         }
-        return status;
+        return statusParam;
     }
 }

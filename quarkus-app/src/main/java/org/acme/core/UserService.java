@@ -18,21 +18,19 @@ public class UserService {
 
     @Transactional
     public User findOrCreateByExternalId(String externalId, String username, String email) {
-        return userRepository.findByExternalId(externalId)
-                .map(currentUser -> {
-                    if (Objects.equals(currentUser.username, username) && Objects.equals(currentUser.email, email)) {
-                        return currentUser;
-                    }
-                    User updatedUser = new User(currentUser.id, currentUser.externalId, username, email, currentUser.createdAt);
-                    return userRepository.update(updatedUser);
-                })
-                .orElseGet(() -> {
-                    User u = new User(null, externalId, username, email, OffsetDateTime.now());
-                    try {
-                        return userRepository.save(u);
-                    } catch (PersistenceException e) {
-                        return userRepository.findByExternalId(externalId).orElseThrow(() -> e);
-                    }
-                });
+        return userRepository.findByExternalId(externalId).map(currentUser -> {
+            if (Objects.equals(currentUser.getUsername(), username) && Objects.equals(currentUser.getEmail(), email)) {
+                return currentUser;
+            }
+            User updatedUser = new User(currentUser.getId(), currentUser.getExternalId(), username, email, currentUser.getCreatedAt());
+            return userRepository.update(updatedUser);
+        }).orElseGet(() -> {
+            User u = new User(null, externalId, username, email, OffsetDateTime.now());
+            try {
+                return userRepository.save(u);
+            } catch (PersistenceException e) {
+                return userRepository.findByExternalId(externalId).orElseThrow(() -> e);
+            }
+        });
     }
 }

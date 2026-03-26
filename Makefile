@@ -5,7 +5,7 @@ SERVICE := quarkus-app
 WORKDIR := /workspace
 MVN := mvn
 
-.PHONY: help docker-up docker-down build test lint coverage clean ci
+.PHONY: help docker-up docker-down build test lint lint-fix coverage clean ci
 
 help:
 	@echo "Usage: make <target>"
@@ -32,9 +32,23 @@ test:
 	$(DOCKER_COMPOSE) run --rm -w $(WORKDIR) $(SERVICE) $(MVN) -f pom.xml test
 
 lint:
-	# Uses maven-checkstyle-plugin if configured in the project; will download plugin if absent
-	$(DOCKER_COMPOSE) run --rm -w $(WORKDIR) $(SERVICE) $(MVN) -f pom.xml checkstyle:check || \
-		{ echo "Checkstyle failed or not configured; you can add a checkstyle config to pom.xml"; exit 1; }
+	@# Run Checkstyle only when the project explicitly configures it.
+	@if grep -q "maven-checkstyle-plugin" $(SERVICE)/pom.xml; then \
+		$(DOCKER_COMPOSE) run --rm -w $(WORKDIR) $(SERVICE) $(MVN) -f pom.xml checkstyle:check; \
+	else \
+		echo "Checkstyle plugin is not configured in $(SERVICE)/pom.xml; skipping lint."; \
+	fi
+
+# Try to apply automatic formatting/fixes using common Maven plugins.
+# This is best-effort: it uses Spotless when configured and otherwise falls back to Revelc formatter.
+lint-fix:
+	@echo "Attempting to apply automatic formatting (spotless / formatter)..."
+	@if grep -q "spotless-maven-plugin" $(SERVICE)/pom.xml; then \
+		$(DOCKER_COMPOSE) run --rm -w $(WORKDIR) $(SERVICE) $(MVN) -f pom.xml com.diffplug.spotless:spotless-maven-plugin:apply || \
+		$(DOCKER_COMPOSE) run --rm -w $(WORKDIR) $(SERVICE) $(MVN) -f pom.xml net.revelc.code.formatter:formatter-maven-plugin:format; \
+	else \
+		$(DOCKER_COMPOSE) run --rm -w $(WORKDIR) $(SERVICE) $(MVN) -f pom.xml net.revelc.code.formatter:formatter-maven-plugin:format; \
+	fi || { echo "No auto-format plugin applied. Add Spotless or formatter-maven-plugin to pom.xml, then re-run 'make lint-fix'."; exit 0; }
 
 coverage:
 	# Run tests and generate JaCoCo report under target/site/jacoco

@@ -30,56 +30,31 @@ public class ContactService {
     }
 
     @Transactional
-    public Contact create(Long ownerUserId,
-                          String firstName,
-                          String lastName,
-                          LocalDate birthDate,
-                          List<String> phoneNumbers,
-                          String relationshipDegree) {
+    public Contact create(Long ownerUserId, String firstName, String lastName, LocalDate birthDate,
+            List<String> phoneNumbers, String relationshipDegree) {
         OffsetDateTime now = OffsetDateTime.now();
-        Contact contact = new Contact(
-                null,
-            Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED)),
-                firstName,
-                lastName,
-                birthDate,
-                buildPhoneNumbers(phoneNumbers, now),
-                relationshipDegree,
-                now,
-                now,
-                IAgendaEntity.Status.ACTIVE
-        );
+        Contact contact = Contact.builder().id(null)
+                .ownerUserId(Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED)))
+                .firstName(firstName).lastName(lastName).birthDate(birthDate)
+                .phoneNumbers(buildPhoneNumbers(phoneNumbers, now)).relationshipDegree(relationshipDegree)
+                .createdAt(now).updatedAt(now).status(IAgendaEntity.Status.ACTIVE).build();
         return contactRepository.save(contact);
     }
 
     @Transactional
-    public Optional<Contact> update(Long ownerUserId,
-                                    Long contactId,
-                                    String firstName,
-                                    String lastName,
-                                    LocalDate birthDate,
-                                    List<String> phoneNumbers,
-                                    String relationshipDegree) {
+    public Optional<Contact> update(Long ownerUserId, Long contactId, String firstName, String lastName,
+            LocalDate birthDate, List<String> phoneNumbers, String relationshipDegree) {
         Objects.requireNonNull(ownerUserId, AgendaMessages.get(MessageKey.OWNER_USER_REQUIRED));
         Objects.requireNonNull(contactId, AgendaMessages.get(MessageKey.CONTACT_REQUIRED));
 
-        return contactRepository.findActiveByIdAndOwnerUserId(contactId, ownerUserId)
-            .flatMap(current -> {
-                OffsetDateTime now = OffsetDateTime.now();
-                Contact updated = new Contact(
-                    current.id,
-                    current.ownerUserId,
-                    firstName,
-                    lastName,
-                    birthDate,
-                    buildPhoneNumbers(phoneNumbers, now),
-                    relationshipDegree,
-                    current.createdAt,
-                    now,
-                    current.status
-                );
-                return contactRepository.update(updated);
-            });
+        return contactRepository.findActiveByIdAndOwnerUserId(contactId, ownerUserId).flatMap(current -> {
+            OffsetDateTime now = OffsetDateTime.now();
+            Contact updated = Contact.builder().id(current.getId()).ownerUserId(current.getOwnerUserId())
+                    .firstName(firstName).lastName(lastName).birthDate(birthDate)
+                    .phoneNumbers(buildPhoneNumbers(phoneNumbers, now)).relationshipDegree(relationshipDegree)
+                    .createdAt(current.getCreatedAt()).updatedAt(now).status(current.getStatus()).build();
+            return contactRepository.update(updated);
+        });
     }
 
     @Transactional
@@ -89,8 +64,7 @@ public class ContactService {
 
     private List<PhoneNumber> buildPhoneNumbers(List<String> phoneNumbers, OffsetDateTime now) {
         Objects.requireNonNull(phoneNumbers, AgendaMessages.get(MessageKey.PHONE_REQUIRED));
-        return phoneNumbers.stream()
-                .map(number -> new PhoneNumber(null, number, now, now, IAgendaEntity.Status.ACTIVE))
+        return phoneNumbers.stream().map(number -> new PhoneNumber(null, number, now, now, IAgendaEntity.Status.ACTIVE))
                 .toList();
     }
 }

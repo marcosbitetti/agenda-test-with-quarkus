@@ -32,21 +32,11 @@ public class AuthSessionService {
     @ConfigProperty(name = "agenda.auth.refresh-skew-seconds", defaultValue = "15")
     long refreshSkewSeconds;
 
-    public SessionData createSession(UserSession user,
-                                     String accessToken,
-                                     Instant accessTokenExpiresAt,
-                                     String refreshToken,
-                                     Instant refreshTokenExpiresAt) {
+    public SessionData createSession(UserSession user, String accessToken, Instant accessTokenExpiresAt,
+            String refreshToken, Instant refreshTokenExpiresAt) {
         String sessionId = UUID.randomUUID().toString();
-        SessionData session = new SessionData(
-                sessionId,
-                user,
-                accessToken,
-                accessTokenExpiresAt,
-                refreshToken,
-                refreshTokenExpiresAt,
-                Instant.now()
-        );
+        SessionData session = new SessionData(sessionId, user, accessToken, accessTokenExpiresAt, refreshToken,
+                refreshTokenExpiresAt, Instant.now());
         return authSessionRepository.save(session);
     }
 
@@ -67,12 +57,9 @@ public class AuthSessionService {
         Instant now = Instant.now();
         if (session.refreshTokenExpiresAt().isBefore(now)) {
             authSessionRepository.deleteById(sessionId);
-            try (var ignored = StructuredLogContext.open(Map.of(
-                    StructuredLogFields.EVENT, "auth.session.expired",
-                    StructuredLogFields.OUTCOME, "refresh_token_expired",
-                    StructuredLogFields.SESSION_ID, sessionId,
-                    StructuredLogFields.USER_ID, session.user().subject()
-            ))) {
+            try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.session.expired",
+                    StructuredLogFields.OUTCOME, "refresh_token_expired", StructuredLogFields.SESSION_ID, sessionId,
+                    StructuredLogFields.USER_ID, session.user().subject()))) {
                 LOG.info("auth.session.expired");
             }
             return Optional.empty();
@@ -87,45 +74,33 @@ public class AuthSessionService {
             LOG.debugf("auth.session.refresh.required sessionId=%s userId=%s", session.id(), session.user().subject());
             long startedAt = System.nanoTime();
             var refreshed = authenticator.refresh(session.refreshToken());
-            SessionData refreshedSession = new SessionData(
-                    session.id(),
+            SessionData refreshedSession = new SessionData(session.id(),
                     new UserSession(refreshed.subject(), refreshed.username(), refreshed.email()),
-                    refreshed.accessToken(),
-                    refreshed.accessTokenExpiresAt(),
-                    refreshed.refreshToken(),
-                    refreshed.refreshTokenExpiresAt(),
-                    session.createdAt()
-            );
+                    refreshed.accessToken(), refreshed.accessTokenExpiresAt(), refreshed.refreshToken(),
+                    refreshed.refreshTokenExpiresAt(), session.createdAt());
             SessionData savedSession = authSessionRepository.save(refreshedSession);
-            try (var ignored = StructuredLogContext.open(Map.of(
-                    StructuredLogFields.EVENT, "auth.session.refreshed",
-                    StructuredLogFields.OUTCOME, "success",
-                    StructuredLogFields.SESSION_ID, session.id(),
-                    StructuredLogFields.USER_ID, refreshed.subject(),
-                    StructuredLogFields.DURATION_MS, Duration.ofNanos(System.nanoTime() - startedAt).toMillis()
-            ))) {
+            try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.session.refreshed",
+                    StructuredLogFields.OUTCOME, "success", StructuredLogFields.SESSION_ID, session.id(),
+                    StructuredLogFields.USER_ID, refreshed.subject(), StructuredLogFields.DURATION_MS,
+                    Duration.ofNanos(System.nanoTime() - startedAt).toMillis()))) {
                 LOG.info("auth.session.refreshed");
             }
             return Optional.of(savedSession);
         } catch (KeycloakPasswordAuthenticator.KeycloakAuthenticationException e) {
             if (e.failureType() == KeycloakPasswordAuthenticator.FailureType.REFRESH_REJECTED) {
                 authSessionRepository.deleteById(sessionId);
-                try (var ignored = StructuredLogContext.open(Map.of(
-                        StructuredLogFields.EVENT, "auth.session.refresh_failed",
-                        StructuredLogFields.OUTCOME, "refresh_rejected",
-                        StructuredLogFields.SESSION_ID, session.id(),
-                        StructuredLogFields.USER_ID, session.user().subject()
-                ))) {
+                try (var ignored = StructuredLogContext
+                        .open(Map.of(StructuredLogFields.EVENT, "auth.session.refresh_failed",
+                                StructuredLogFields.OUTCOME, "refresh_rejected", StructuredLogFields.SESSION_ID,
+                                session.id(), StructuredLogFields.USER_ID, session.user().subject()))) {
                     LOG.warn("auth.session.refresh_failed");
                 }
                 return Optional.empty();
             }
-            try (var ignored = StructuredLogContext.open(Map.of(
-                    StructuredLogFields.EVENT, "auth.session.refresh_failed",
-                    StructuredLogFields.OUTCOME, "auth_provider_unavailable",
-                    StructuredLogFields.SESSION_ID, session.id(),
-                    StructuredLogFields.USER_ID, session.user().subject()
-            ))) {
+            try (var ignored = StructuredLogContext
+                    .open(Map.of(StructuredLogFields.EVENT, "auth.session.refresh_failed", StructuredLogFields.OUTCOME,
+                            "auth_provider_unavailable", StructuredLogFields.SESSION_ID, session.id(),
+                            StructuredLogFields.USER_ID, session.user().subject()))) {
                 LOG.error("auth.session.refresh_failed", e);
             }
             throw new SessionUnavailableException(AgendaMessages.get(MessageKey.AUTH_SESSION_REFRESH_FAILED), e);
@@ -142,11 +117,9 @@ public class AuthSessionService {
     public long cleanupExpiredSessions() {
         long deleted = authSessionRepository.deleteExpiredSessions();
         if (deleted > 0) {
-            try (var ignored = StructuredLogContext.open(Map.of(
-                    StructuredLogFields.EVENT, "auth.session.cleanup.completed",
-                    StructuredLogFields.OUTCOME, "success",
-                    StructuredLogFields.DELETED_SESSIONS, deleted
-            ))) {
+            try (var ignored = StructuredLogContext
+                    .open(Map.of(StructuredLogFields.EVENT, "auth.session.cleanup.completed",
+                            StructuredLogFields.OUTCOME, "success", StructuredLogFields.DELETED_SESSIONS, deleted))) {
                 LOG.info("auth.session.cleanup.completed");
             }
         }
@@ -165,12 +138,10 @@ public class AuthSessionService {
             session.ifPresent(current -> authenticator.logout(current.refreshToken()));
         } catch (KeycloakPasswordAuthenticator.KeycloakAuthenticationException ignored) {
             session.ifPresent(current -> {
-                try (var context = StructuredLogContext.open(Map.of(
-                        StructuredLogFields.EVENT, "auth.logout.remote_failed",
-                        StructuredLogFields.OUTCOME, "auth_provider_unavailable",
-                        StructuredLogFields.SESSION_ID, current.id(),
-                        StructuredLogFields.USER_ID, current.user().subject()
-                ))) {
+                try (var context = StructuredLogContext.open(
+                        Map.of(StructuredLogFields.EVENT, "auth.logout.remote_failed", StructuredLogFields.OUTCOME,
+                                "auth_provider_unavailable", StructuredLogFields.SESSION_ID, current.id(),
+                                StructuredLogFields.USER_ID, current.user().subject()))) {
                     LOG.warn("auth.logout.remote_failed");
                 }
             });
@@ -179,13 +150,8 @@ public class AuthSessionService {
         }
     }
 
-    public record SessionData(String id,
-                              UserSession user,
-                              String accessToken,
-                              Instant accessTokenExpiresAt,
-                              String refreshToken,
-                              Instant refreshTokenExpiresAt,
-                              Instant createdAt) {
+    public record SessionData(String id, UserSession user, String accessToken, Instant accessTokenExpiresAt,
+            String refreshToken, Instant refreshTokenExpiresAt, Instant createdAt) {
     }
 
     public record UserSession(String subject, String username, String email) {

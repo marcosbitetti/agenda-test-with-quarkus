@@ -10,8 +10,7 @@ import org.acme.domain.PhoneNumber;
 
 @Entity
 @Table(name = "phone_numbers", indexes = {
-        @jakarta.persistence.Index(name = "idx_phone_numbers_contact_status", columnList = "contact_id, status")
-})
+        @jakarta.persistence.Index(name = "idx_phone_numbers_contact_status", columnList = "contact_id, status") })
 public class PhoneNumberEntity extends AgendaBaseEntity {
 
     @Column(name = "number", nullable = false)
@@ -27,13 +26,12 @@ public class PhoneNumberEntity extends AgendaBaseEntity {
 
     public static PhoneNumberEntity fromDomain(PhoneNumber phoneNumber, ContactEntity contact) {
         PhoneNumberEntity entity = new PhoneNumberEntity();
-        entity.id = phoneNumber.id;
-        entity.number = phoneNumber.number;
-        entity.createdAt = phoneNumber.createdAt;
-        entity.updatedAt = phoneNumber.updatedAt;
-        entity.status = phoneNumber.status;
+        entity.id = phoneNumber.getId();
+        entity.number = phoneNumber.getNumber();
+        entity.createdAt = phoneNumber.getCreatedAt();
+        entity.updatedAt = phoneNumber.getUpdatedAt();
+        entity.status = phoneNumber.getStatus();
         entity.contact = contact;
         return entity;
     }
 }
-

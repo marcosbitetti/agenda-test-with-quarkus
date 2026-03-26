@@ -32,16 +32,13 @@ public class UserResource {
     public Response me(@CookieParam(AuthSessionService.COOKIE_NAME) String sessionId) {
         LOG.debug("users.me.received");
         try {
-                var session = authSessionService.findActiveSession(sessionId)
-                    .orElseThrow(() -> new NotAuthorizedException(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)));
+            var session = authSessionService.findActiveSession(sessionId).orElseThrow(
+                    () -> new NotAuthorizedException(AgendaMessages.get(MessageKey.AUTH_SESSION_INVALID_OR_EXPIRED)));
 
-                var currentUser = session.user();
+            var currentUser = session.user();
 
-                var user = userService.findOrCreateByExternalId(
-                    currentUser.subject(),
-                    currentUser.username(),
-                    currentUser.email()
-                );
+            var user = userService.findOrCreateByExternalId(currentUser.subject(), currentUser.username(),
+                    currentUser.email());
             LOG.debugf("users.me.completed subject=%s username=%s", currentUser.subject(), currentUser.username());
             return Response.ok(new UserDto(user)).build();
         } catch (AuthSessionService.SessionUnavailableException e) {

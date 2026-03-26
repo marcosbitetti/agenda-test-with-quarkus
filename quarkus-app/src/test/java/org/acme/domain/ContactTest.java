@@ -20,21 +20,10 @@ public class ContactTest {
     public void createContactWithRequiredData() {
         OffsetDateTime createdAt = OffsetDateTime.parse("2026-03-25T10:15:30Z");
         OffsetDateTime updatedAt = OffsetDateTime.parse("2026-03-25T12:30:00Z");
-        Contact result = new Contact(
-                10L,
-                1L,
-                " Maria ",
-                " Silva ",
-                LocalDate.of(1990, 5, 20),
-                List.of(
-                    new PhoneNumber(null, "11999999999", createdAt, updatedAt, Status.ACTIVE),
-                    new PhoneNumber(null, "1133334444", createdAt, updatedAt, Status.ACTIVE)
-                ),
-                "  Irma ",
-                createdAt,
-                updatedAt,
-                Status.ACTIVE
-        );
+        Contact result = new Contact(10L, 1L, " Maria ", " Silva ", LocalDate.of(1990, 5, 20),
+                List.of(new PhoneNumber(null, "11999999999", createdAt, updatedAt, Status.ACTIVE),
+                        new PhoneNumber(null, "1133334444", createdAt, updatedAt, Status.ACTIVE)),
+                "  Irma ", createdAt, updatedAt, Status.ACTIVE);
 
         assertEquals(10L, result.id);
         assertEquals(1L, result.ownerUserId);
@@ -51,36 +40,18 @@ public class ContactTest {
 
     @Test
     public void contactInheritsAgendaEntityContract() {
-        Contact result = new Contact(
-                null,
-                1L,
-                "Joao",
-                "Souza",
-                LocalDate.of(1988, 1, 10),
-                List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)),
-                null,
-                null,
-                null,
-                Status.ACTIVE
-        );
+        Contact result = new Contact(null, 1L, "Joao", "Souza", LocalDate.of(1988, 1, 10),
+                List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null,
+                Status.ACTIVE);
 
-            assertEquals(Status.ACTIVE, result.status);
+        assertEquals(Status.ACTIVE, result.status);
     }
 
     @Test
     public void normalizeOptionalRelationshipDegree() {
-        Contact result = new Contact(
-                null,
-                1L,
-                "Joao",
-                "Souza",
-                LocalDate.of(1988, 1, 10),
-                List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)),
-                "   ",
-                null,
-                null,
-                Status.ACTIVE
-        );
+        Contact result = new Contact(null, 1L, "Joao", "Souza", LocalDate.of(1988, 1, 10),
+                List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), "   ", null, null,
+                Status.ACTIVE);
 
         assertNull(result.relationshipDegree);
     }
@@ -88,7 +59,9 @@ public class ContactTest {
     @Test
     public void rejectMissingFirstName() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> new Contact(null, 1L, " ", "Souza", LocalDate.now(), List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null, Status.ACTIVE));
+                () -> new Contact(null, 1L, " ", "Souza", LocalDate.now(),
+                        List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null,
+                        Status.ACTIVE));
 
         assertEquals(AgendaMessages.get(MessageKey.FIRST_NAME_REQUIRED), error.getMessage());
     }
@@ -96,7 +69,9 @@ public class ContactTest {
     @Test
     public void rejectMissingLastName() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> new Contact(null, 1L, "Joao", " ", LocalDate.now(), List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null, Status.ACTIVE));
+                () -> new Contact(null, 1L, "Joao", " ", LocalDate.now(),
+                        List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null,
+                        Status.ACTIVE));
 
         assertEquals(AgendaMessages.get(MessageKey.LAST_NAME_REQUIRED), error.getMessage());
     }
@@ -104,15 +79,17 @@ public class ContactTest {
     @Test
     public void rejectMissingBirthDate() {
         NullPointerException error = assertThrows(NullPointerException.class,
-                () -> new Contact(null, 1L, "Joao", "Souza", null, List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null, Status.ACTIVE));
+                () -> new Contact(null, 1L, "Joao", "Souza", null,
+                        List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null,
+                        Status.ACTIVE));
 
         assertEquals(AgendaMessages.get(MessageKey.BIRTH_DATE_REQUIRED), error.getMessage());
     }
 
     @Test
     public void rejectEmptyPhoneNumbers() {
-        IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> new Contact(null, 1L, "Joao", "Souza", LocalDate.now(), List.of(), null, null, null, Status.ACTIVE));
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> new Contact(null, 1L,
+                "Joao", "Souza", LocalDate.now(), List.of(), null, null, null, Status.ACTIVE));
 
         assertEquals(AgendaMessages.get(MessageKey.PHONE_REQUIRED), error.getMessage());
     }
@@ -120,7 +97,9 @@ public class ContactTest {
     @Test
     public void rejectNullPhoneNumberItem() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> new Contact(null, 1L, "Joao", "Souza", LocalDate.now(), Arrays.asList(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE), null), null, null, null, Status.ACTIVE));
+                () -> new Contact(null, 1L, "Joao", "Souza", LocalDate.now(),
+                        Arrays.asList(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE), null), null,
+                        null, null, Status.ACTIVE));
 
         assertEquals(AgendaMessages.get(MessageKey.PHONE_INVALID), error.getMessage());
     }
@@ -130,18 +109,9 @@ public class ContactTest {
         OffsetDateTime createdAt = OffsetDateTime.parse("2026-03-25T10:15:30Z");
         OffsetDateTime updatedAt = OffsetDateTime.parse("2026-03-25T12:30:00Z");
         OffsetDateTime deletedAt = OffsetDateTime.parse("2026-03-26T08:00:00Z");
-        Contact result = new Contact(
-                10L,
-                1L,
-                "Maria",
-                "Silva",
-                LocalDate.of(1990, 5, 20),
-                List.of(new PhoneNumber(null, "11999999999", createdAt, updatedAt, Status.ACTIVE)),
-                "Irma",
-                createdAt,
-                updatedAt,
-                Status.ACTIVE
-        );
+        Contact result = new Contact(10L, 1L, "Maria", "Silva", LocalDate.of(1990, 5, 20),
+                List.of(new PhoneNumber(null, "11999999999", createdAt, updatedAt, Status.ACTIVE)), "Irma", createdAt,
+                updatedAt, Status.ACTIVE);
 
         result.softDelete(deletedAt);
 
@@ -153,18 +123,9 @@ public class ContactTest {
     @Test
     public void rejectInvalidStatus() {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class,
-                () -> new Contact(
-                        10L,
-                        1L,
-                        "Maria",
-                        "Silva",
-                        LocalDate.of(1990, 5, 20),
-                        List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)),
-                        null,
-                        null,
-                        null,
-                                                null
-                ));
+                () -> new Contact(10L, 1L, "Maria", "Silva", LocalDate.of(1990, 5, 20),
+                        List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null,
+                        null));
 
         assertEquals(AgendaMessages.get(MessageKey.STATUS_INVALID), error.getMessage());
     }

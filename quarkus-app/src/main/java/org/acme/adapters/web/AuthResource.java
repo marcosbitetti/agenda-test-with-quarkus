@@ -45,77 +45,61 @@ public class AuthResource {
         long startedAt = System.nanoTime();
         LOG.debug("auth.login.received");
         if (request == null || blank(request.username()) || blank(request.password())) {
-            try (var ignored = StructuredLogContext.open(Map.of(
-                    StructuredLogFields.EVENT, "auth.login.failed",
-                    StructuredLogFields.OUTCOME, "validation_error",
-                    StructuredLogFields.HTTP_STATUS, 400
-            ))) {
+            try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.login.failed",
+                    StructuredLogFields.OUTCOME, "validation_error", StructuredLogFields.HTTP_STATUS, 400))) {
                 LOG.warn("auth.login.failed");
             }
             return Response.status(Response.Status.BAD_REQUEST)
-                    .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_LOGIN_REQUIRED), Response.Status.BAD_REQUEST.getStatusCode()))
+                    .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_LOGIN_REQUIRED),
+                            Response.Status.BAD_REQUEST.getStatusCode()))
                     .build();
         }
 
         try {
             var authenticated = authenticator.authenticate(request.username().trim(), request.password());
-            var user = userService.findOrCreateByExternalId(
-                    authenticated.subject(),
-                    authenticated.username(),
-                    authenticated.email()
-            );
+            var user = userService.findOrCreateByExternalId(authenticated.subject(), authenticated.username(),
+                    authenticated.email());
 
             var session = authSessionService.createSession(
-                    new AuthSessionService.UserSession(authenticated.subject(), authenticated.username(), authenticated.email()),
-                    authenticated.accessToken(),
-                    authenticated.accessTokenExpiresAt(),
-                    authenticated.refreshToken(),
-                    authenticated.refreshTokenExpiresAt()
-            );
+                    new AuthSessionService.UserSession(authenticated.subject(), authenticated.username(),
+                            authenticated.email()),
+                    authenticated.accessToken(), authenticated.accessTokenExpiresAt(), authenticated.refreshToken(),
+                    authenticated.refreshTokenExpiresAt());
 
-                long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
-                try (var ignored = StructuredLogContext.open(Map.of(
-                    StructuredLogFields.EVENT, "auth.login.succeeded",
-                    StructuredLogFields.OUTCOME, "success",
-                    StructuredLogFields.USER_ID, authenticated.subject(),
-                    StructuredLogFields.SESSION_ID, session.id(),
-                    StructuredLogFields.DURATION_MS, durationMs,
-                    StructuredLogFields.HTTP_STATUS, 200
-                ))) {
+            long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
+            try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.login.succeeded",
+                    StructuredLogFields.OUTCOME, "success", StructuredLogFields.USER_ID, authenticated.subject(),
+                    StructuredLogFields.SESSION_ID, session.id(), StructuredLogFields.DURATION_MS, durationMs,
+                    StructuredLogFields.HTTP_STATUS, 200))) {
                 LOG.info("auth.login.succeeded");
-                }
+            }
 
-            return Response.ok(new UserDto(user))
-                    .cookie(sessionCookie(session.id(), session.refreshTokenExpiresAt()))
+            return Response.ok(new UserDto(user)).cookie(sessionCookie(session.id(), session.refreshTokenExpiresAt()))
                     .build();
         } catch (KeycloakPasswordAuthenticator.KeycloakAuthenticationException e) {
             if (e.failureType() == KeycloakPasswordAuthenticator.FailureType.INVALID_CREDENTIALS) {
                 long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
-                try (var ignored = StructuredLogContext.open(Map.of(
-                    StructuredLogFields.EVENT, "auth.login.failed",
-                    StructuredLogFields.OUTCOME, "invalid_credentials",
-                    StructuredLogFields.DURATION_MS, durationMs,
-                    StructuredLogFields.HTTP_STATUS, 401
-                ))) {
+                try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.login.failed",
+                        StructuredLogFields.OUTCOME, "invalid_credentials", StructuredLogFields.DURATION_MS, durationMs,
+                        StructuredLogFields.HTTP_STATUS, 401))) {
                     LOG.warn("auth.login.failed");
                 }
                 return Response.status(Response.Status.UNAUTHORIZED)
-                    .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_INVALID_CREDENTIALS), Response.Status.UNAUTHORIZED.getStatusCode()))
+                        .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_INVALID_CREDENTIALS),
+                                Response.Status.UNAUTHORIZED.getStatusCode()))
                         .build();
             }
 
-                long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
-                try (var ignored = StructuredLogContext.open(Map.of(
-                    StructuredLogFields.EVENT, "auth.login.failed",
-                    StructuredLogFields.OUTCOME, "auth_provider_unavailable",
-                    StructuredLogFields.DURATION_MS, durationMs,
-                    StructuredLogFields.HTTP_STATUS, 503
-                ))) {
+            long durationMs = Duration.ofNanos(System.nanoTime() - startedAt).toMillis();
+            try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.login.failed",
+                    StructuredLogFields.OUTCOME, "auth_provider_unavailable", StructuredLogFields.DURATION_MS,
+                    durationMs, StructuredLogFields.HTTP_STATUS, 503))) {
                 LOG.error("auth.login.failed", e);
-                }
+            }
 
             return Response.status(Response.Status.SERVICE_UNAVAILABLE)
-            .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE), Response.Status.SERVICE_UNAVAILABLE.getStatusCode()))
+                    .entity(ApiErrorResponse.current(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE),
+                            Response.Status.SERVICE_UNAVAILABLE.getStatusCode()))
                     .build();
         }
     }
@@ -124,38 +108,23 @@ public class AuthResource {
     @Path("/session")
     public Response logout(@CookieParam(AuthSessionService.COOKIE_NAME) String sessionId) {
         authSessionService.logout(sessionId);
-        try (var ignored = StructuredLogContext.open(Map.of(
-                StructuredLogFields.EVENT, "auth.logout.succeeded",
-                StructuredLogFields.OUTCOME, "success",
-                StructuredLogFields.SESSION_ID, sessionId == null ? "anonymous" : sessionId,
-                StructuredLogFields.HTTP_STATUS, 204
-        ))) {
+        try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "auth.logout.succeeded",
+                StructuredLogFields.OUTCOME, "success", StructuredLogFields.SESSION_ID,
+                sessionId == null ? "anonymous" : sessionId, StructuredLogFields.HTTP_STATUS, 204))) {
             LOG.info("auth.logout.succeeded");
         }
-        return Response.noContent()
-                .cookie(expiredSessionCookie())
-                .build();
+        return Response.noContent().cookie(expiredSessionCookie()).build();
     }
 
     private NewCookie sessionCookie(String sessionId, Instant expiresAt) {
         int maxAge = Math.max(0, (int) Duration.between(Instant.now(), expiresAt).getSeconds());
-        return new NewCookie.Builder(AuthSessionService.COOKIE_NAME)
-                .value(sessionId)
-                .path("/")
-                .httpOnly(true)
-                .sameSite(NewCookie.SameSite.LAX)
-                .maxAge(maxAge)
-                .build();
+        return new NewCookie.Builder(AuthSessionService.COOKIE_NAME).value(sessionId).path("/").httpOnly(true)
+                .sameSite(NewCookie.SameSite.LAX).maxAge(maxAge).build();
     }
 
     private NewCookie expiredSessionCookie() {
-        return new NewCookie.Builder(AuthSessionService.COOKIE_NAME)
-                .value("")
-                .path("/")
-                .httpOnly(true)
-                .sameSite(NewCookie.SameSite.LAX)
-                .maxAge(0)
-                .build();
+        return new NewCookie.Builder(AuthSessionService.COOKIE_NAME).value("").path("/").httpOnly(true)
+                .sameSite(NewCookie.SameSite.LAX).maxAge(0).build();
     }
 
     private boolean blank(String value) {

@@ -18,18 +18,9 @@ public class ContactEntityTest {
     public void fromDomainMapsContactAndPhones() {
         OffsetDateTime createdAt = OffsetDateTime.parse("2026-03-25T10:15:30Z");
         OffsetDateTime updatedAt = OffsetDateTime.parse("2026-03-25T12:30:00Z");
-        Contact contact = new Contact(
-                10L,
-                1L,
-                "Maria",
-                "Silva",
-                LocalDate.of(1990, 5, 20),
-                List.of(new PhoneNumber(20L, "11999999999", createdAt, updatedAt, IAgendaEntity.Status.ACTIVE)),
-                "Irma",
-                createdAt,
-                updatedAt,
-                IAgendaEntity.Status.ACTIVE
-        );
+        Contact contact = new Contact(10L, 1L, "Maria", "Silva", LocalDate.of(1990, 5, 20),
+                List.of(new PhoneNumber(20L, "11999999999", createdAt, updatedAt, IAgendaEntity.Status.ACTIVE)), "Irma",
+                createdAt, updatedAt, IAgendaEntity.Status.ACTIVE);
 
         ContactEntity entity = ContactEntity.fromDomain(contact);
 

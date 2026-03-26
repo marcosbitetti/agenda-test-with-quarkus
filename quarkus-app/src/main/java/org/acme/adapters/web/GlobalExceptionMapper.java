@@ -29,27 +29,20 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
         String message = resolveMessage(throwable, status);
         boolean expectedClientError = isExpectedClientError(status);
 
-        try (var ignored = StructuredLogContext.open(Map.of(
-            StructuredLogFields.EVENT, "http.request.failed",
-            StructuredLogFields.OUTCOME, expectedClientError ? "client_error" : "exception",
-            StructuredLogFields.HTTP_STATUS, status,
-            StructuredLogFields.EXCEPTION_TYPE, throwable.getClass().getName(),
-            StructuredLogFields.EXCEPTION_MESSAGE, throwable.getMessage()
-        ))) {
+        try (var ignored = StructuredLogContext.open(Map.of(StructuredLogFields.EVENT, "http.request.failed",
+                StructuredLogFields.OUTCOME, expectedClientError ? "client_error" : "exception",
+                StructuredLogFields.HTTP_STATUS, status, StructuredLogFields.EXCEPTION_TYPE,
+                throwable.getClass().getName(), StructuredLogFields.EXCEPTION_MESSAGE, throwable.getMessage()))) {
             if (expectedClientError) {
-                LOG.warnf("http.request.failed status=%s type=%s message=%s",
-                        status,
-                        throwable.getClass().getSimpleName(),
-                        message);
+                LOG.warnf("http.request.failed status=%s type=%s message=%s", status,
+                        throwable.getClass().getSimpleName(), message);
             } else {
                 LOG.error("http.request.failed", throwable);
             }
         }
 
-        return Response.status(status)
-                .type(MediaType.APPLICATION_JSON)
-                .entity(ApiErrorResponse.current(message, status))
-                .build();
+        return Response.status(status).type(MediaType.APPLICATION_JSON)
+                .entity(ApiErrorResponse.current(message, status)).build();
     }
 
     private int resolveStatus(Throwable throwable) {
@@ -70,9 +63,11 @@ public class GlobalExceptionMapper implements ExceptionMapper<Throwable> {
             return fallback(throwable.getMessage(), AgendaMessages.get(MessageKey.METHOD_NOT_ALLOWED));
         }
         if (throwable instanceof WebApplicationException) {
-            return fallback(normalizeMessage(throwable.getMessage()), Response.Status.fromStatusCode(status).getReasonPhrase());
+            return fallback(normalizeMessage(throwable.getMessage()),
+                    Response.Status.fromStatusCode(status).getReasonPhrase());
         }
-        return fallback(normalizeMessage(throwable.getMessage()), AgendaMessages.get(MessageKey.REQUEST_INTERNAL_FAILURE));
+        return fallback(normalizeMessage(throwable.getMessage()),
+                AgendaMessages.get(MessageKey.REQUEST_INTERNAL_FAILURE));
     }
 
     private String fallback(String message, String fallback) {

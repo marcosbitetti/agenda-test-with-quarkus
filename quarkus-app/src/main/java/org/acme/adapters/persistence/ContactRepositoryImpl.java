@@ -11,31 +11,25 @@ import java.util.List;
 import java.util.Optional;
 
 @ApplicationScoped
-public class ContactRepositoryImpl implements ContactRepository {
+public final class ContactRepositoryImpl implements ContactRepository {
 
     @Override
-    public List<Contact> listActiveByOwnerUserId(Long ownerUserId) {
-        return ContactEntity.find("ownerUserId = ?1 and status = ?2", ownerUserId, IAgendaEntity.Status.ACTIVE)
-                .list()
-                .stream()
-                .map(ContactEntity.class::cast)
-                .map(ContactEntity::toDomain)
-                .toList();
+    public List<Contact> listActiveByOwnerUserId(final Long ownerUserId) {
+        var results = ContactEntity.find("ownerUserId = ?1 and status = ?2", ownerUserId, IAgendaEntity.Status.ACTIVE)
+                .list();
+
+        return results.stream().map(ContactEntity.class::cast).map(ContactEntity::toDomain).toList();
     }
 
     @Override
-    public Optional<Contact> findActiveByIdAndOwnerUserId(Long contactId, Long ownerUserId) {
-        ContactEntity entity = ContactEntity.find(
-                "id = ?1 and ownerUserId = ?2 and status = ?3",
-                contactId,
-                ownerUserId,
-                IAgendaEntity.Status.ACTIVE
-        ).firstResult();
+    public Optional<Contact> findActiveByIdAndOwnerUserId(final Long contactId, final Long ownerUserId) {
+        ContactEntity entity = ContactEntity.find("id = ?1 and ownerUserId = ?2 and status = ?3", contactId,
+                ownerUserId, IAgendaEntity.Status.ACTIVE).firstResult();
         return Optional.ofNullable(entity).map(ContactEntity::toDomain);
     }
 
     @Override
-    public Contact save(Contact contact) {
+    public Contact save(final Contact contact) {
         ContactEntity entity = ContactEntity.fromDomain(contact);
         entity.createdAt = Objects.requireNonNullElse(entity.createdAt, OffsetDateTime.now());
         entity.status = Objects.requireNonNullElse(entity.status, IAgendaEntity.Status.ACTIVE);
@@ -44,45 +38,36 @@ public class ContactRepositoryImpl implements ContactRepository {
     }
 
     @Override
-    public Optional<Contact> update(Contact contact) {
-        ContactEntity entity = ContactEntity.find(
-                "id = ?1 and ownerUserId = ?2 and status = ?3",
-                contact.id,
-                contact.ownerUserId,
-                IAgendaEntity.Status.ACTIVE
-        ).firstResult();
+    public Optional<Contact> update(final Contact contact) {
+        ContactEntity entity = ContactEntity.find("id = ?1 and ownerUserId = ?2 and status = ?3", contact.getId(),
+                contact.getOwnerUserId(), IAgendaEntity.Status.ACTIVE).firstResult();
         if (entity == null) {
             return Optional.empty();
         }
 
-        entity.firstName = contact.firstName;
-        entity.lastName = contact.lastName;
-        entity.birthDate = contact.birthDate;
-        entity.relationshipDegree = contact.relationshipDegree;
-        entity.updatedAt = contact.updatedAt;
+        entity.firstName = contact.getFirstName();
+        entity.lastName = contact.getLastName();
+        entity.birthDate = contact.getBirthDate();
+        entity.relationshipDegree = contact.getRelationshipDegree();
+        entity.updatedAt = contact.getUpdatedAt();
 
         if (entity.phoneNumbers != null) {
             entity.phoneNumbers.forEach(phoneNumber -> {
                 phoneNumber.status = IAgendaEntity.Status.DELETED;
-                phoneNumber.updatedAt = contact.updatedAt;
+                phoneNumber.updatedAt = contact.getUpdatedAt();
             });
         }
 
-        entity.phoneNumbers = contact.phoneNumbers.stream()
-                .map(phoneNumber -> PhoneNumberEntity.fromDomain(phoneNumber, entity))
-                .toList();
+        entity.phoneNumbers = contact.getPhoneNumbers().stream()
+                .map(phoneNumber -> PhoneNumberEntity.fromDomain(phoneNumber, entity)).toList();
 
         return Optional.of(entity.toDomain());
     }
 
     @Override
-    public void softDelete(Long contactId, Long ownerUserId, OffsetDateTime updatedAt) {
-        ContactEntity entity = ContactEntity.find(
-                "id = ?1 and ownerUserId = ?2 and status = ?3",
-                contactId,
-                ownerUserId,
-                IAgendaEntity.Status.ACTIVE
-        ).firstResult();
+    public void softDelete(final Long contactId, final Long ownerUserId, final OffsetDateTime updatedAt) {
+        ContactEntity entity = ContactEntity.find("id = ?1 and ownerUserId = ?2 and status = ?3", contactId,
+                ownerUserId, IAgendaEntity.Status.ACTIVE).firstResult();
         if (entity == null) {
             return;
         }

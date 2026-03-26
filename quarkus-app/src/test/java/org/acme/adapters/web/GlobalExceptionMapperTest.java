@@ -22,12 +22,10 @@ public class GlobalExceptionMapperTest {
     public void internalServerErrorProducesEnriched500Payload() {
         GlobalExceptionMapper mapper = new GlobalExceptionMapper();
 
-        try (var ignored = StructuredLogContext.open(Map.of(
-                "requestId", "req-500",
-            "httpMethod", HttpMethod.POST,
-                "requestPath", "/api/contacts"
-        ))) {
-            Response response = mapper.toResponse(new RuntimeException(AgendaMessages.get(MessageKey.UNEXPECTED_FAILURE)));
+        try (var ignored = StructuredLogContext
+                .open(Map.of("requestId", "req-500", "httpMethod", HttpMethod.POST, "requestPath", "/api/contacts"))) {
+            Response response = mapper
+                    .toResponse(new RuntimeException(AgendaMessages.get(MessageKey.UNEXPECTED_FAILURE)));
 
             assertEquals(500, response.getStatus());
             assertEquals("application/json", response.getMediaType().toString());
@@ -49,12 +47,10 @@ public class GlobalExceptionMapperTest {
     public void serviceUnavailableProducesEnriched503Payload() {
         GlobalExceptionMapper mapper = new GlobalExceptionMapper();
 
-        try (var ignored = StructuredLogContext.open(Map.of(
-                "requestId", "req-503",
-            "httpMethod", HttpMethod.GET,
-                "requestPath", "/api/users/me"
-        ))) {
-            Response response = mapper.toResponse(new ServiceUnavailableException(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE)));
+        try (var ignored = StructuredLogContext
+                .open(Map.of("requestId", "req-503", "httpMethod", HttpMethod.GET, "requestPath", "/api/users/me"))) {
+            Response response = mapper.toResponse(
+                    new ServiceUnavailableException(AgendaMessages.get(MessageKey.AUTH_SERVICE_UNAVAILABLE)));
 
             assertEquals(503, response.getStatus());
             assertEquals("application/json", response.getMediaType().toString());

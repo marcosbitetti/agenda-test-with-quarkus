@@ -8,13 +8,18 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import org.acme.domain.Contact;
 import org.acme.domain.IAgendaEntity;
+import org.acme.domain.PhoneNumber;
 
 import java.util.List;
 
 @Entity
 @Table(name = "contacts", indexes = {
-        @jakarta.persistence.Index(name = "idx_contacts_owner_status", columnList = "owner_user_id, status")
-})
+        @jakarta.persistence.Index(name = "idx_contacts_owner_status", columnList = "owner_user_id, status") })
+/**
+ * JPA entity mapping for contacts.
+ * <p>
+ * This class provides conversion helpers between persistence and domain models.
+ */
 public class ContactEntity extends AgendaBaseEntity {
 
     @Column(name = "owner_user_id", nullable = false)
@@ -36,37 +41,37 @@ public class ContactEntity extends AgendaBaseEntity {
     public List<PhoneNumberEntity> phoneNumbers;
 
     public Contact toDomain() {
-        return new Contact(
-                id,
-                ownerUserId,
-                firstName,
-                lastName,
-                birthDate,
-            phoneNumbers == null ? List.of() : phoneNumbers.stream()
-                .filter(phoneNumber -> phoneNumber.status == IAgendaEntity.Status.ACTIVE)
-                .map(PhoneNumberEntity::toDomain)
-                .toList(),
-                relationshipDegree,
-                createdAt,
-                updatedAt,
-                status
-        );
+        final List<PhoneNumber> phones;
+        if (phoneNumbers == null) {
+            phones = List.of();
+        } else {
+            phones = phoneNumbers.stream().filter(phoneNumber -> phoneNumber.status == IAgendaEntity.Status.ACTIVE)
+                    .map(PhoneNumberEntity::toDomain).toList();
+        }
+
+        return new Contact(super.getId(), ownerUserId, firstName, lastName, birthDate, phones, relationshipDegree, super.getCreatedAt(),
+                super.getUpdatedAt(), super.getStatus());
     }
 
-    public static ContactEntity fromDomain(Contact contact) {
+    public static ContactEntity fromDomain(final Contact contact) {
         ContactEntity entity = new ContactEntity();
-        entity.id = contact.id;
-        entity.ownerUserId = contact.ownerUserId;
-        entity.firstName = contact.firstName;
-        entity.lastName = contact.lastName;
-        entity.birthDate = contact.birthDate;
-        entity.relationshipDegree = contact.relationshipDegree;
-        entity.createdAt = contact.createdAt;
-        entity.updatedAt = contact.updatedAt;
-        entity.status = contact.status;
-        entity.phoneNumbers = contact.phoneNumbers == null ? List.of() : contact.phoneNumbers.stream()
-                .map(phoneNumber -> PhoneNumberEntity.fromDomain(phoneNumber, entity))
-                .toList();
+        entity.id = contact.getId();
+        entity.ownerUserId = contact.getOwnerUserId();
+        entity.firstName = contact.getFirstName();
+        entity.lastName = contact.getLastName();
+        entity.birthDate = contact.getBirthDate();
+        entity.relationshipDegree = contact.getRelationshipDegree();
+        entity.createdAt = contact.getCreatedAt();
+        entity.updatedAt = contact.getUpdatedAt();
+        entity.status = contact.getStatus();
+
+        if (contact.getPhoneNumbers() == null) {
+            entity.phoneNumbers = List.of();
+        } else {
+            entity.phoneNumbers = contact.getPhoneNumbers().stream()
+                    .map(phoneNumber -> PhoneNumberEntity.fromDomain(phoneNumber, entity)).toList();
+        }
+
         return entity;
     }
 }

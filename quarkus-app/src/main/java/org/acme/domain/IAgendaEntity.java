@@ -4,8 +4,7 @@ import java.time.OffsetDateTime;
 
 public interface IAgendaEntity {
     enum Status {
-        ACTIVE,
-        DELETED
+        ACTIVE, DELETED
     }
 
     Long getId();
@@ -18,5 +17,5 @@ public interface IAgendaEntity {
 
     boolean isDeleted();
 
-    void softDelete(OffsetDateTime updatedAt);
+    void softDelete(final OffsetDateTime updatedAt);
 }
