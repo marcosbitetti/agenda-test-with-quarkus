@@ -41,11 +41,11 @@ public class ContactServiceTest {
                 List.of("11999999999", "1133334444"), "Irma");
 
         assertNotNull(result);
-        assertEquals(10L, result.ownerUserId);
-        assertEquals("Maria", result.firstName);
-        assertEquals(2, result.phoneNumbers.size());
-        assertEquals(IAgendaEntity.Status.ACTIVE, result.status);
-        assertEquals(IAgendaEntity.Status.ACTIVE, result.phoneNumbers.get(0).status);
+        assertEquals(10L, result.getOwnerUserId());
+        assertEquals("Maria", result.getFirstName());
+        assertEquals(2, result.getPhoneNumbers().size());
+        assertEquals(IAgendaEntity.Status.ACTIVE, result.getStatus());
+        assertEquals(IAgendaEntity.Status.ACTIVE, result.getPhoneNumbers().get(0).getStatus());
         verify(contactRepository).save(any(Contact.class));
     }
 
@@ -101,11 +101,11 @@ public class ContactServiceTest {
                 List.of("11911112222", "1133334444"), "Prima");
 
         assertTrue(updated.isPresent());
-        assertEquals(5L, updated.orElseThrow().id);
-        assertEquals(10L, updated.orElseThrow().ownerUserId);
-        assertEquals("Maria Clara", updated.orElseThrow().firstName);
-        assertEquals("Oliveira", updated.orElseThrow().lastName);
-        assertEquals(2, updated.orElseThrow().phoneNumbers.size());
+        assertEquals(5L, updated.orElseThrow().getId());
+        assertEquals(10L, updated.orElseThrow().getOwnerUserId());
+        assertEquals("Maria Clara", updated.orElseThrow().getFirstName());
+        assertEquals("Oliveira", updated.orElseThrow().getLastName());
+        assertEquals(2, updated.orElseThrow().getPhoneNumbers().size());
         verify(contactRepository).update(any(Contact.class));
     }
 

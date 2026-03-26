@@ -25,17 +25,17 @@ public class ContactTest {
                         new PhoneNumber(null, "1133334444", createdAt, updatedAt, Status.ACTIVE)),
                 "  Irma ", createdAt, updatedAt, Status.ACTIVE);
 
-        assertEquals(10L, result.id);
-        assertEquals(1L, result.ownerUserId);
-        assertEquals("Maria", result.firstName);
-        assertEquals("Silva", result.lastName);
-        assertEquals(LocalDate.of(1990, 5, 20), result.birthDate);
-        assertEquals(2, result.phoneNumbers.size());
-        assertEquals("Irma", result.relationshipDegree);
+        assertEquals(10L, result.getId());
+        assertEquals(1L, result.getOwnerUserId());
+        assertEquals("Maria", result.getFirstName());
+        assertEquals("Silva", result.getLastName());
+        assertEquals(LocalDate.of(1990, 5, 20), result.getBirthDate());
+        assertEquals(2, result.getPhoneNumbers().size());
+        assertEquals("Irma", result.getRelationshipDegree());
         assertEquals("Maria Silva", result.fullName());
-        assertEquals(createdAt, result.createdAt);
-        assertEquals(updatedAt, result.updatedAt);
-        assertEquals(Status.ACTIVE, result.status);
+        assertEquals(createdAt, result.getCreatedAt());
+        assertEquals(updatedAt, result.getUpdatedAt());
+        assertEquals(Status.ACTIVE, result.getStatus());
     }
 
     @Test
@@ -44,7 +44,7 @@ public class ContactTest {
                 List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), null, null, null,
                 Status.ACTIVE);
 
-        assertEquals(Status.ACTIVE, result.status);
+        assertEquals(Status.ACTIVE, result.getStatus());
     }
 
     @Test
@@ -53,7 +53,7 @@ public class ContactTest {
                 List.of(new PhoneNumber(null, "11999999999", null, null, Status.ACTIVE)), "   ", null, null,
                 Status.ACTIVE);
 
-        assertNull(result.relationshipDegree);
+        assertNull(result.getRelationshipDegree());
     }
 
     @Test
@@ -115,8 +115,8 @@ public class ContactTest {
 
         result.softDelete(deletedAt);
 
-        assertEquals(deletedAt, result.updatedAt);
-        assertEquals(Status.DELETED, result.status);
+        assertEquals(deletedAt, result.getUpdatedAt());
+        assertEquals(Status.DELETED, result.getStatus());
         assertEquals(true, result.isDeleted());
     }
 

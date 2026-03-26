@@ -58,12 +58,12 @@ public class ContactEntityTest {
 
         Contact contact = entity.toDomain();
 
-        assertEquals(10L, contact.id);
-        assertEquals(1L, contact.ownerUserId);
-        assertEquals("Maria", contact.firstName);
-        assertEquals(1, contact.phoneNumbers.size());
-        assertEquals("11999999999", contact.phoneNumbers.get(0).number);
-        assertEquals(IAgendaEntity.Status.ACTIVE, contact.status);
+        assertEquals(10L, contact.getId());
+        assertEquals(1L, contact.getOwnerUserId());
+        assertEquals("Maria", contact.getFirstName());
+        assertEquals(1, contact.getPhoneNumbers().size());
+        assertEquals("11999999999", contact.getPhoneNumbers().get(0).getNumber());
+        assertEquals(IAgendaEntity.Status.ACTIVE, contact.getStatus());
     }
 
     @Test
@@ -101,7 +101,7 @@ public class ContactEntityTest {
 
         Contact contact = entity.toDomain();
 
-        assertEquals(1, contact.phoneNumbers.size());
-        assertEquals("11999999999", contact.phoneNumbers.get(0).number);
+        assertEquals(1, contact.getPhoneNumbers().size());
+        assertEquals("11999999999", contact.getPhoneNumbers().get(0).getNumber());
     }
 }

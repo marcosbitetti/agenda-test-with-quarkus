@@ -18,18 +18,18 @@ public class PhoneNumberTest {
         OffsetDateTime updatedAt = OffsetDateTime.parse("2026-03-25T12:30:00Z");
         PhoneNumber result = new PhoneNumber(1L, " 11999999999 ", createdAt, updatedAt, Status.ACTIVE);
 
-        assertEquals(1L, result.id);
-        assertEquals("11999999999", result.number);
-        assertEquals(createdAt, result.createdAt);
-        assertEquals(updatedAt, result.updatedAt);
-        assertEquals(Status.ACTIVE, result.status);
+        assertEquals(1L, result.getId());
+        assertEquals("11999999999", result.getNumber());
+        assertEquals(createdAt, result.getCreatedAt());
+        assertEquals(updatedAt, result.getUpdatedAt());
+        assertEquals(Status.ACTIVE, result.getStatus());
     }
 
     @Test
     public void phoneNumberInheritsAgendaEntityContract() {
         PhoneNumber result = new PhoneNumber(1L, "11999999999", null, null, Status.ACTIVE);
 
-        assertEquals(Status.ACTIVE, result.status);
+        assertEquals(Status.ACTIVE, result.getStatus());
     }
 
     @Test
@@ -49,8 +49,8 @@ public class PhoneNumberTest {
 
         result.softDelete(deletedAt);
 
-        assertEquals(deletedAt, result.updatedAt);
-        assertEquals(Status.DELETED, result.status);
+        assertEquals(deletedAt, result.getUpdatedAt());
+        assertEquals(Status.DELETED, result.getStatus());
         assertEquals(true, result.isDeleted());
     }
 

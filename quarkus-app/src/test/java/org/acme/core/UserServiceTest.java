@@ -33,9 +33,9 @@ public class UserServiceTest {
         User result = userService.findOrCreateByExternalId("ext-123", "joao", "joao@example.com");
 
         assertNotNull(result);
-        assertEquals(1L, result.id);
-        assertEquals("ext-123", result.externalId);
-        assertEquals("joao", result.username);
+        assertEquals(1L, result.getId());
+        assertEquals("ext-123", result.getExternalId());
+        assertEquals("joao", result.getUsername());
         verify(userRepository, never()).update(any(User.class));
     }
 
@@ -49,15 +49,15 @@ public class UserServiceTest {
         User result = userService.findOrCreateByExternalId("ext-new", "newuser", "new@example.com");
 
         assertNotNull(result);
-        assertEquals(2L, result.id);
-        assertEquals("ext-new", result.externalId);
-        assertEquals("newuser", result.username);
+        assertEquals(2L, result.getId());
+        assertEquals("ext-new", result.getExternalId());
+        assertEquals("newuser", result.getUsername());
     }
 
     @Test
     public void updateExistingWhenIdentityDataChanges() {
         User existing = new User(1L, "ext-123", "joao", "joao@old.example.com", OffsetDateTime.now());
-        User updated = new User(1L, "ext-123", "joao", "joao@example.com", existing.createdAt);
+        User updated = new User(1L, "ext-123", "joao", "joao@example.com", existing.getCreatedAt());
 
         when(userRepository.findByExternalId("ext-123")).thenReturn(Optional.of(existing));
         when(userRepository.update(any(User.class))).thenReturn(updated);
@@ -65,7 +65,7 @@ public class UserServiceTest {
         User result = userService.findOrCreateByExternalId("ext-123", "joao", "joao@example.com");
 
         assertNotNull(result);
-        assertEquals("joao@example.com", result.email);
+        assertEquals("joao@example.com", result.getEmail());
         verify(userRepository).update(any(User.class));
     }
 }
